@@ -6,8 +6,11 @@ import { AppearanceProvider } from "@/context/AppearanceContext";
 import { ReminderProvider } from "@/context/ReminderContext";
 import { DataProvider } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
+import { canRotate } from "@/utils/layoutMode";
+import * as ScreenOrientation from "expo-screen-orientation";
 import { StatusBar } from "expo-status-bar";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { Platform, useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useReducedMotion } from "react-native-reanimated";
 
@@ -15,9 +18,23 @@ export const unstable_settings = {
   anchor: '(tabs)'
 }
 
+// Phones stay in portrait; tablets (shorter side 600 or more) can turn (board, "Turning the phone").
+function useOrientationRule() {
+  const { width, height } = useWindowDimensions();
+  const rotate = canRotate(width, height);
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    const change = rotate
+      ? ScreenOrientation.unlockAsync()
+      : ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    change.catch(() => {});
+  }, [rotate]);
+}
+
 // Lives inside the providers so it can read the mode that is showing.
 function ThemedNavigation() {
   const c = useColors();
+  useOrientationRule();
   // A pushed screen slides in from the right (motion table); with Reduce Motion it fades.
   const reduceMotion = useReducedMotion();
   const push = reduceMotion ? 'fade' : 'slide_from_right';

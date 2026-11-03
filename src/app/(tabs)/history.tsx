@@ -1,13 +1,16 @@
 import { StorageNotice } from '@/components/StorageNotice';
-import { DaySheet } from '@/components/DaySheet';
+import { DayPane, DaySheet } from '@/components/DaySheet';
 import { AppText } from '@/components/ui/AppText';
 import { IconButton } from '@/components/ui/IconButton';
+import { Panes, tabScreenEdges } from '@/components/ui/Panes';
 import { ScreenTitle } from '@/components/ui/ScreenParts';
 import { COPY, daysLine, monthDosesLine } from '@/constants/copy';
-import { LAYOUT } from '@/constants/layout';
+import { LAYOUT, TABLET } from '@/constants/layout';
+import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
 import { useRituals } from '@/context/DataContext';
 import { useColors } from '@/hooks/useColors';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useToday } from '@/hooks/useToday';
 import { dayLabel } from '@/utils/a11y';
 import { earliestMonth, MONTH_NAMES, MonthView, monthIndex, shiftMonth } from '@/utils/calendar';
@@ -19,6 +22,7 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, Share } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -46,6 +50,11 @@ export default function HistoryScreen() {
 
   const [sheetDate, setSheetDate] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Tablets show the day beside the month instead of in a sheet: today until another day is tapped.
+  const mode = useLayoutMode();
+  const tablet = mode !== 'phone';
+  const [paneDate, setPaneDate] = useState<string | null>(null);
+  const shownDay = paneDate ?? today;
 
   const weeks = historyWeeks(rituals, view, today);
   const doses = buildMonthCard(rituals, view, today).doses;
@@ -59,13 +68,15 @@ export default function HistoryScreen() {
 
   const openDay = (date: string) => {
     haptic.dayTap();
+    if (tablet) {
+      setPaneDate(date);
+      return;
+    }
     setSheetDate(date);
     setSheetOpen(true);
   };
 
-  return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.ground }}>
-      <StorageNotice />
+  const month = (
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
         <ScreenTitle
           title={COPY.history.title}
@@ -112,6 +123,8 @@ export default function HistoryScreen() {
                 if (cell === null) return <View key={col} style={{ flex: 1, aspectRatio: 1 }} />;
                 const { state, isToday } = cell;
                 const future = state === 'future';
+                // The ring marks today, and on a tablet also the day shown beside the month.
+                const ringed = isToday || (tablet && hasRituals && cell.date === shownDay);
                 const done = future ? 0 : rituals.filter((r) => r.completedDates.includes(cell.date)).length;
                 return (
                   <Pressable
@@ -129,7 +142,7 @@ export default function HistoryScreen() {
                       justifyContent: 'center',
                       backgroundColor:
                         state === 'all' ? c.accent : state === 'some' ? c.tint : future ? 'transparent' : c.surface,
-                      boxShadow: isToday ? `0px 0px 0px 2px ${c.ground}, 0px 0px 0px 4px ${c.text}` : undefined,
+                      boxShadow: ringed ? `0px 0px 0px 2px ${c.ground}, 0px 0px 0px 4px ${c.text}` : undefined,
                     }}
                   >
                     <AppText
@@ -191,7 +204,31 @@ export default function HistoryScreen() {
           </View>
         )}
       </ScrollView>
+  );
 
+  if (tablet) {
+    return (
+      <SafeAreaView edges={tabScreenEdges(mode)} style={{ flex: 1, backgroundColor: c.ground }}>
+        <StorageNotice />
+        <Panes
+          leftWidth={TABLET.historyList[mode === 'wide' ? 'wide' : 'tablet']}
+          left={month}
+          right={
+            hasRituals ? (
+              <Animated.View key={shownDay} entering={FadeIn.duration(MOTION.dayListFade)} style={{ flex: 1 }}>
+                <DayPane date={shownDay} rituals={rituals} />
+              </Animated.View>
+            ) : null
+          }
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.ground }}>
+      <StorageNotice />
+      {month}
       <DaySheet visible={sheetOpen} date={sheetDate} rituals={rituals} onClose={() => setSheetOpen(false)} />
     </SafeAreaView>
   );

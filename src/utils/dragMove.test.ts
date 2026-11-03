@@ -5,6 +5,7 @@ import {
   ARROW_HOLD_MS,
   ARROW_REPEAT_MS,
   arrowFlips,
+  boardTarget,
   DragLayout,
   dropMeaning,
   dropTarget,
@@ -83,4 +84,32 @@ test('the timings are calm: a press of 400 ms lifts, a hold of 600 ms flips', ()
   assert.equal(LONG_PRESS_MS, 400);
   assert.equal(ARROW_HOLD_MS, 600);
   assert.ok(ARROW_REPEAT_MS >= ARROW_HOLD_MS);
+});
+
+// A tablet board: 14 padding, columns of 100 with gaps of 4, so column i starts at 14 + 104 i.
+const BOARD = {
+  grid: { x: 0, y: 120, width: 752, height: 600 },
+  pad: 14,
+  gap: 4,
+  prev: { x: 560, y: 40, width: 44, height: 44 },
+  next: { x: 700, y: 40, width: 44, height: 44 },
+};
+
+test('on the tablet board a task drops onto a column, anywhere along its height', () => {
+  assert.deepEqual(boardTarget(64, 130, BOARD), { kind: 'day', index: 0 });
+  assert.deepEqual(boardTarget(584, 700, BOARD), { kind: 'day', index: 5 });
+  assert.deepEqual(boardTarget(740, 400, BOARD), { kind: 'day', index: 6 });
+});
+
+test('the gap between two columns is split between them', () => {
+  assert.deepEqual(boardTarget(115, 300, BOARD), { kind: 'day', index: 0 });
+  assert.deepEqual(boardTarget(116, 300, BOARD), { kind: 'day', index: 1 });
+});
+
+test('the board arrows win over the columns, and outside the board is nothing', () => {
+  assert.deepEqual(boardTarget(580, 60, BOARD), { kind: 'prev' });
+  assert.deepEqual(boardTarget(720, 60, BOARD), { kind: 'next' });
+  assert.equal(boardTarget(300, 20, BOARD), null);
+  assert.equal(boardTarget(300, 760, BOARD), null);
+  assert.equal(boardTarget(760, 300, BOARD), null);
 });

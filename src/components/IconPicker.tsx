@@ -1,4 +1,4 @@
-import { LAYOUT, TOUCH } from '@/constants/layout';
+import { hitSlopFor, LAYOUT, TOUCH } from '@/constants/layout';
 import { PICKER_ICONS, RITUAL_ICON_MAP } from '@/constants/ritualIcons';
 import { useColors } from '@/hooks/useColors';
 import { RitualIconType } from '@/types';
@@ -8,21 +8,23 @@ import { Pressable, View } from 'react-native';
 interface IconPickerProps {
   selected: RitualIconType;
   onSelect: (icon: RitualIconType) => void;
+  // Tablets keep six to a row in the form's narrower icon column (frame J); the touch area still reaches 48.
+  alwaysSix?: boolean;
 }
 
 // Six grey circles to a row, or five on a narrow phone so each one stays big enough to press.
 // Sizes are rounded down so a row never spills over, and each row is centred.
-function gridFor(width: number) {
+function gridFor(width: number, alwaysSix: boolean) {
   const fit = (columns: number) => Math.floor((width - LAYOUT.iconGap * (columns - 1)) / columns);
-  const columns = fit(LAYOUT.iconColumns) >= TOUCH ? LAYOUT.iconColumns : LAYOUT.iconColumns - 1;
+  const columns = alwaysSix || fit(LAYOUT.iconColumns) >= TOUCH ? LAYOUT.iconColumns : LAYOUT.iconColumns - 1;
   return { columns, cell: fit(columns) };
 }
 
 // The chosen icon turns pine with a pine ring around it.
-export function IconPicker({ selected, onSelect }: IconPickerProps) {
+export function IconPicker({ selected, onSelect, alwaysSix = false }: IconPickerProps) {
   const c = useColors();
   const [width, setWidth] = useState(0);
-  const { columns, cell } = gridFor(width);
+  const { columns, cell } = gridFor(width, alwaysSix);
 
   const rows: RitualIconType[][] = [];
   for (let i = 0; i < PICKER_ICONS.length; i += columns) rows.push(PICKER_ICONS.slice(i, i + columns));
@@ -50,6 +52,7 @@ export function IconPicker({ selected, onSelect }: IconPickerProps) {
                   accessibilityRole="radio"
                   accessibilityLabel={label}
                   accessibilityState={{ selected: on }}
+                  hitSlop={hitSlopFor(cell)}
                   style={{
                     width: cell,
                     height: cell,

@@ -3,6 +3,7 @@
 
 export const COPY = {
   common: {
+    appName: 'Day Book',
     readOnly: 'Read only',
     done: 'Done',
     cancel: 'Cancel',
@@ -24,6 +25,8 @@ export const COPY = {
   ritual: {
     changeRule: 'You can change today and yesterday. Older days are a record.',
     thisWeek: 'This week',
+    // Tablets, beside the list (frame D).
+    thisMonth: 'This month',
     note: 'Note',
     markDone: 'Mark as done',
     doneToday: 'Done for today',
@@ -35,6 +38,8 @@ export const COPY = {
     notePlaceholder: 'Why you do it, or anything to remember',
     namePlaceholder: 'Morning tea',
     iconLabel: 'Icon',
+    // Tablets, in the wider form (frame J).
+    previewLabel: 'Preview',
     deleteRitual: 'Delete ritual',
     deleteBody: "Its history will be removed too. This can't be undone.",
     keepIt: 'Keep it',
@@ -108,6 +113,8 @@ export const COPY = {
     eveningSub: 'Sent only if rituals are still open.',
     morningSub: 'Sent only on days that have tasks.',
     time: 'Time',
+    // Tablets, under the reminders (frame G).
+    onLockScreen: 'On the lock screen',
     blocked: "Notifications are off for Day Book. Turn them on in your phone's settings.",
     openPhoneSettings: 'Open phone settings',
     saveBackup: 'Save a backup',

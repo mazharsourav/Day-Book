@@ -1,6 +1,7 @@
-import { TabBar, type TabKey } from '@/components/ui/TabBar';
+import { SideBar, TabBar, type TabKey } from '@/components/ui/TabBar';
 import { MOTION } from '@/constants/motion';
 import { useTasks } from '@/context/DataContext';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useToday } from '@/hooks/useToday';
 import { openCountOn } from '@/utils/tasks';
 import { Tabs } from 'expo-router';
@@ -15,6 +16,7 @@ const KEY_FOR_ROUTE: Record<string, TabKey> = { index: 'today', week: 'week', hi
 function AppTabBar({ state, navigation }: TabBarProps) {
   const { tasks } = useTasks();
   const today = useToday();
+  const mode = useLayoutMode();
   const routes = state.routes.filter((r) => KEY_FOR_ROUTE[r.name] !== undefined);
   const active = KEY_FOR_ROUTE[state.routes[state.index].name] ?? 'today';
 
@@ -25,8 +27,9 @@ function AppTabBar({ state, navigation }: TabBarProps) {
     if (key !== active && !event.defaultPrevented) navigation.navigate(route.name, route.params);
   };
 
+  const Bar = mode === 'wide' ? SideBar : TabBar;
   return (
-    <TabBar
+    <Bar
       tabs={routes.map((r) => KEY_FOR_ROUTE[r.name])}
       active={active}
       onPress={handlePress}
@@ -36,10 +39,13 @@ function AppTabBar({ state, navigation }: TabBarProps) {
 }
 
 export default function TabLayout() {
+  // From 900 wide the tabs move to a side bar on the left (board frame H).
+  const mode = useLayoutMode();
   return (
     <Tabs
       // Switching tabs cross-fades the content (motion table: 150 ms, no sliding).
       screenOptions={{
+        tabBarPosition: mode === 'wide' ? 'left' : 'bottom',
         headerShown: false,
         animation: 'fade',
         transitionSpec: { animation: 'timing', config: { duration: MOTION.tabFade } },

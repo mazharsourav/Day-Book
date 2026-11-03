@@ -1,12 +1,14 @@
 import { StorageNotice } from '@/components/StorageNotice';
 import { AppText } from '@/components/ui/AppText';
+import { Column } from '@/components/ui/Panes';
 import { BackRow } from '@/components/ui/ScreenParts';
 import { TickCircle } from '@/components/ui/TickCircle';
 import { COPY } from '@/constants/copy';
-import { LAYOUT } from '@/constants/layout';
+import { LAYOUT, TABLET } from '@/constants/layout';
 import { getRitualIcon } from '@/constants/ritualIcons';
 import { TYPE } from '@/constants/type';
 import { useColors } from '@/hooks/useColors';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useUses24Hour } from '@/hooks/useUses24Hour';
 import { DEFAULT_REMINDERS } from '@/utils/reminderSettings';
 import { timeLabel } from '@/utils/timeFormat';
@@ -21,12 +23,15 @@ export default function HowItWorksScreen() {
   const router = useRouter();
   const c = useColors();
   const uses24 = useUses24Hour();
+  const tablet = useLayoutMode() !== 'phone';
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/settings'));
   const [rituals, fixing, week, history, reminders, data] = COPY.how.sections;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.ground }}>
       <StorageNotice />
+      {/* On a tablet it stays one column, centred, 560 wide (board chapter 10). */}
+      <Column width={tablet ? TABLET.column : undefined}>
       <BackRow label={COPY.how.back} onBack={goBack} />
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View style={{ paddingTop: 6, paddingHorizontal: LAYOUT.screenPadding }}>
@@ -101,6 +106,7 @@ export default function HowItWorksScreen() {
 
         <Section title={data.title} body={data.body} />
       </ScrollView>
+      </Column>
     </SafeAreaView>
   );
 }

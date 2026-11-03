@@ -5,7 +5,7 @@ import { ModalCard } from '@/components/ui/ModalCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { darkColors, lightColors } from '@/constants/Colors';
 import { COPY } from '@/constants/copy';
-import { LAYOUT } from '@/constants/layout';
+import { LAYOUT, TABLET } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
 import { useRituals } from '@/context/DataContext';
@@ -13,6 +13,7 @@ import { useColors } from '@/hooks/useColors';
 import { useToday } from '@/hooks/useToday';
 import { MONTH_NAMES, MonthView } from '@/utils/calendar';
 import { fromDateString } from '@/utils/dates';
+import { layoutMode } from '@/utils/layoutMode';
 import { buildMonthCard, monthCardSummary } from '@/utils/monthCard';
 import { shareCardImage } from '@/utils/shareImage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -64,9 +65,12 @@ export default function ShareMonthScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const cardRef = useRef<View>(null);
 
+  // On a tablet the screen is a centred card about a phone screen tall, so the card is measured against that.
+  const tablet = layoutMode(screenWidth) !== 'phone';
+  const roomHeight = tablet ? Math.min(TABLET.tallCardHeight, screenHeight - insets.top - insets.bottom - 24) + 50 : screenHeight;
   const cardWidth = Math.max(
     CARD_MIN,
-    Math.min(CARD_WIDTH, screenWidth - 2 * LAYOUT.screenPadding, ((screenHeight - AROUND_CARD) * 9) / 16)
+    Math.min(CARD_WIDTH, screenWidth - 2 * LAYOUT.screenPadding, ((roomHeight - AROUND_CARD) * 9) / 16)
   );
   const monthNumber = String(view.month + 1).padStart(2, '0');
 
@@ -86,7 +90,7 @@ export default function ShareMonthScreen() {
   const bottom = Math.max(insets.bottom, 18) + 16;
 
   return (
-    <ModalCard title={COPY.share.title} left={{ label: COPY.share.close, onPress: () => router.back() }}>
+    <ModalCard title={COPY.share.title} left={{ label: COPY.share.close, onPress: () => router.back() }} tall>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottom + LAYOUT.buttonHeight + 16 }}

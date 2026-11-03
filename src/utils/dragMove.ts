@@ -43,6 +43,29 @@ export function dropTarget(x: number, y: number, layout: DragLayout): DropTarget
   return { kind: 'day', index: Math.max(0, Math.min(6, index)) };
 }
 
+// Tablets (frame I): the seven-day board. Every day is a column, so a task is dropped straight onto
+// a column, anywhere along its height.
+export interface BoardLayout {
+  grid: Rect;
+  // The board's side padding and the gap between columns.
+  pad: number;
+  gap: number;
+  prev: Rect;
+  next: Rect;
+}
+
+export function boardTarget(x: number, y: number, layout: BoardLayout): DropTarget {
+  if (inside(x, y, layout.prev, ARROW_SLOP)) return { kind: 'prev' };
+  if (inside(x, y, layout.next, ARROW_SLOP)) return { kind: 'next' };
+  const { grid, pad, gap } = layout;
+  if (y < grid.y - STRIP_SLOP || y > grid.y + grid.height + STRIP_SLOP) return null;
+  if (x < grid.x || x > grid.x + grid.width) return null;
+  const column = (grid.width - 2 * pad - 6 * gap) / 7;
+  // Half a gap either side belongs to the column next to it, so there is no dead line between days.
+  const index = Math.floor((x - grid.x - pad + gap / 2) / (column + gap));
+  return { kind: 'day', index: Math.max(0, Math.min(6, index)) };
+}
+
 // What dropping there would do. `week` is the seven dates the strip shows, `from` the task's day.
 // A past day refuses ("Past day, read only"); the task's own day and empty space do nothing.
 export type DropMeaning =

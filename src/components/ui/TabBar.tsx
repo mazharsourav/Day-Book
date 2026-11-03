@@ -1,15 +1,19 @@
-import { LAYOUT } from '@/constants/layout';
+import { AppLogo } from '@/components/AppLogo';
+import { LAYOUT, TABLET } from '@/constants/layout';
+import { COPY } from '@/constants/copy';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
 import { useColors } from '@/hooks/useColors';
 import { badgeText, weekTabLabel } from '@/utils/a11y';
 import { Calendar, CircleCheck, ListChecks, Settings, type LucideIcon } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from './AppText';
 
 export type TabKey = 'today' | 'week' | 'history' | 'settings';
+
+const APP_NAME = COPY.common.appName;
 
 const TABS: { key: TabKey; label: string; icon: LucideIcon }[] = [
   { key: 'today', label: 'Today', icon: CircleCheck },
@@ -31,7 +35,10 @@ interface TabBarProps {
 export function TabBar({ tabs, active, onPress, openToday }: TabBarProps) {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const badge = badgeText(openToday);
+  // On a portrait tablet the four tabs keep a phone's spread, centred (frames D to G).
+  const side = Math.max(12, (width - TABLET.tabBarSpread) / 2);
 
   return (
     <View
@@ -42,7 +49,7 @@ export function TabBar({ tabs, active, onPress, openToday }: TabBarProps) {
         borderTopColor: c.line,
         backgroundColor: c.ground,
         paddingTop: LAYOUT.tabBarTopPadding,
-        paddingHorizontal: 12,
+        paddingHorizontal: side,
         paddingBottom: Math.max(insets.bottom, 8),
       }}
     >
@@ -86,6 +93,79 @@ export function TabBar({ tabs, active, onPress, openToday }: TabBarProps) {
               )}
             </View>
             <AppText style={[TYPE.tiny, { color }]}>{label}</AppText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+// Wide tablets (900 and up, frames H and I): the same four tabs as a side bar with the logo.
+// The chosen one sits on a grey pill; the Week number sits at the right of its row.
+export function SideBar({ tabs, active, onPress, openToday }: TabBarProps) {
+  const c = useColors();
+  const insets = useSafeAreaInsets();
+  const badge = badgeText(openToday);
+
+  return (
+    <View
+      accessibilityRole="tablist"
+      style={{
+        width: TABLET.sideBar + insets.left,
+        borderRightWidth: 1,
+        borderRightColor: c.line,
+        backgroundColor: c.ground,
+        paddingTop: insets.top + 18,
+        paddingLeft: 12 + insets.left,
+        paddingRight: 12,
+        gap: 4,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 2, paddingHorizontal: 14, paddingBottom: 20 }}>
+        <AppLogo size={30} look={c.scheme} />
+        <AppText style={{ fontSize: 19, lineHeight: 24, fontWeight: '700', letterSpacing: -0.38 }}>{APP_NAME}</AppText>
+      </View>
+      {TABS.filter((t) => !tabs || tabs.includes(t.key)).map(({ key, label, icon: Icon }) => {
+        const on = key === active;
+        const color = on ? c.text : c.muted;
+        return (
+          <Pressable
+            key={key}
+            onPress={() => onPress(key)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: on }}
+            accessibilityLabel={key === 'week' ? weekTabLabel(openToday) : label}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+              height: TABLET.sideItemHeight,
+              paddingHorizontal: 14,
+              borderRadius: 12,
+              backgroundColor: on ? c.surface : 'transparent',
+            }}
+          >
+            <Icon size={22} color={color} strokeWidth={on ? 2.25 : 1.75} />
+            <AppText style={{ flex: 1, fontSize: 17, lineHeight: 21, fontWeight: '600', color }}>{label}</AppText>
+            {key === 'week' && badge !== '' && (
+              <Animated.View
+                key={badge}
+                entering={ZoomIn.duration(MOTION.badgePop)}
+                style={{
+                  minWidth: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  paddingHorizontal: 6,
+                  backgroundColor: c.accent,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <AppText maxFontSizeMultiplier={1} style={[TYPE.tiny, { color: c.onAccent, fontWeight: '700' }]}>
+                  {badge}
+                </AppText>
+              </Animated.View>
+            )}
           </Pressable>
         );
       })}

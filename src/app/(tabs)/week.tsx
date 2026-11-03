@@ -1,17 +1,20 @@
 import { DayStrip, STRIP_SIDE_PAD } from '@/components/DayStrip';
+import { MovePill } from '@/components/MovePill';
 import { StorageNotice } from '@/components/StorageNotice';
 import { TaskDrag, TaskRow } from '@/components/TaskRow';
+import { WeekBoard } from '@/components/WeekBoard';
 import { AppText } from '@/components/ui/AppText';
 import { IconButton } from '@/components/ui/IconButton';
 import { NewBar } from '@/components/ui/NewBar';
 import { HintLine, ScreenTitle } from '@/components/ui/ScreenParts';
 import { UndoNote } from '@/components/ui/UndoNote';
-import { COPY, emptyDayBody, movedToLine, moveToLine } from '@/constants/copy';
+import { COPY, emptyDayBody, movedToLine } from '@/constants/copy';
 import { LAYOUT } from '@/constants/layout';
 import { TYPE } from '@/constants/type';
 import { MOTION } from '@/constants/motion';
 import { useTasks } from '@/context/DataContext';
 import { useColors } from '@/hooks/useColors';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useToday } from '@/hooks/useToday';
 import { Task } from '@/types';
 import { weekDatesFor } from '@/utils/dates';
@@ -56,7 +59,12 @@ const measure = (ref: RefObject<View | null>) =>
     ref.current.measureInWindow((x, y, width, height) => resolve({ x, y, width, height }));
   });
 
+// Phones show one day at a time; tablets show the whole week as a seven-day board (frame E).
 export default function WeekScreen() {
+  return useLayoutMode() === 'phone' ? <WeekPhone /> : <WeekBoard />;
+}
+
+function WeekPhone() {
   const router = useRouter();
   const c = useColors();
   const { tasks, toggleTask, moveTask, deleteTask, undo, showUndo, clearUndo, putBackTask } = useTasks();
@@ -418,40 +426,5 @@ function WeekSwipe({
     <GestureDetector gesture={swipe}>
       <View>{children}</View>
     </GestureDetector>
-  );
-}
-
-// The pill at the right of the day heading while a task is carried: "Move to Thursday 12",
-// "Hold for next week", or the grey "Past day, read only".
-function MovePill({ meaning }: { meaning: NonNullable<DropMeaning> }) {
-  const c = useColors();
-  const refuse = meaning.kind === 'refuse';
-  const label =
-    meaning.kind === 'move'
-      ? moveToLine(meaning.date)
-      : meaning.kind === 'arrow'
-        ? meaning.weeks === 1
-          ? COPY.week.holdForNextWeek
-          : COPY.week.holdForPreviousWeek
-        : COPY.week.pastDayPill;
-  return (
-    <View
-      accessibilityLiveRegion="polite"
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        marginBottom: 3,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 14,
-        backgroundColor: refuse ? c.surface : c.accent,
-      }}
-    >
-      {refuse && <Lock size={12} color={c.text} strokeWidth={2.5} />}
-      <AppText numberOfLines={1} style={{ fontSize: 13, lineHeight: 17, fontWeight: '600', color: refuse ? c.text : c.onAccent }}>
-        {label}
-      </AppText>
-    </View>
   );
 }

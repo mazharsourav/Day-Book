@@ -66,6 +66,37 @@ export const LAYOUT = {
   iconGap: 10,
 } as const;
 
+// Tablets (board chapter 10, frames D to J). "wide" is 900 and up, with the side bar.
+export const TABLET = {
+  // The bottom tabs on a portrait tablet stay this wide, centred.
+  tabBarSpread: 536,
+  sideBar: 240,
+  sideItemHeight: 48,
+  // The list pane on the left; the detail takes the rest.
+  todayList: { tablet: 380, wide: 420 },
+  historyList: { tablet: 460, wide: 520 },
+  settingsList: 300,
+  // Screens that stay one column (How it works, a ritual opened from a note) are centred this wide.
+  column: 560,
+  // Sheets and forms are centred cards. The ritual form is wider, with the icons on the right.
+  card: 560,
+  cardHeight: 580,
+  cardTop: 130,
+  // Share month keeps its picture at the phone size, so its card is as tall as a phone screen below the status bar.
+  tallCardHeight: 794,
+  formCard: 720,
+  formCardHeight: 480,
+  formCardTop: 150,
+  formIcons: 312,
+  // The seven-day Week board.
+  boardPad: 14,
+  boardGap: 4,
+  boardColumnRadius: 16,
+  boardCardRadius: 12,
+  boardDay: 38,
+  boardAddHeight: 38,
+} as const;
+
 // Extra touch room around a drawing of `size`, so the whole target reaches `target`.
 export function hitSlopFor(size: number, target: number = TOUCH) {
   const pad = Math.max(0, Math.ceil((target - size) / 2));

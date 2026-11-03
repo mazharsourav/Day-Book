@@ -1,6 +1,6 @@
 import { COPY } from '../constants/copy';
-import { MONTH_NAMES } from './calendar';
-import { addDays, fromDateString, weekDatesFor } from './dates';
+import { getCalendarDays, MONTH_NAMES } from './calendar';
+import { addDays, fromDateString, toDateString, weekDatesFor } from './dates';
 import { dayKind, isEditableRitualDay } from './dayRules';
 
 // What Today, the ritual screen and the ritual form show, worked out away from the screens so it can be tested.
@@ -92,6 +92,9 @@ export interface RitualWeekDay {
   kind: 'locked' | 'editable' | 'future';
 }
 
+const ritualDayKind = (date: string, today: string): RitualWeekDay['kind'] =>
+  date > today ? 'future' : isEditableRitualDay(date, today) ? 'editable' : 'locked';
+
 // "This week" on the ritual screen.
 export function ritualWeek(completedDates: string[], today: string): RitualWeekDay[] {
   const done = new Set(completedDates);
@@ -100,6 +103,30 @@ export function ritualWeek(completedDates: string[], today: string): RitualWeekD
     letter: LETTERS[i],
     done: done.has(date),
     isToday: date === today,
-    kind: date > today ? 'future' : isEditableRitualDay(date, today) ? 'editable' : 'locked',
+    kind: ritualDayKind(date, today),
   }));
+}
+
+export interface RitualMonthDay {
+  date: string;
+  day: number;
+  done: boolean;
+  isToday: boolean;
+  kind: RitualWeekDay['kind'];
+}
+
+// "This month" beside the list on a tablet (frame D): this month in rows of seven, Sunday first,
+// with empty cells at both ends. The same rule as the week: only today and yesterday can be changed.
+export function ritualMonth(completedDates: string[], today: string): (RitualMonthDay | null)[][] {
+  const done = new Set(completedDates);
+  const t = fromDateString(today);
+  const cells: (RitualMonthDay | null)[] = getCalendarDays(t.getFullYear(), t.getMonth()).map((day) => {
+    if (day === null) return null;
+    const date = toDateString(new Date(t.getFullYear(), t.getMonth(), day));
+    return { date, day, done: done.has(date), isToday: date === today, kind: ritualDayKind(date, today) };
+  });
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks: (RitualMonthDay | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
 }

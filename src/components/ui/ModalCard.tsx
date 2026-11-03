@@ -1,8 +1,9 @@
-import { LAYOUT } from '@/constants/layout';
+import { LAYOUT, TABLET } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { useColors } from '@/hooks/useColors';
+import { layoutMode } from '@/utils/layoutMode';
 import { ReactNode } from 'react';
-import { KeyboardAvoidingView, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { Easing, FadeIn, SlideInDown, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,6 +21,10 @@ interface ModalCardProps {
   title: string;
   left: NavAction;
   right?: NavAction;
+  // Tablets: the ritual form is a wider card (frame J). Other forms are 560.
+  wide?: boolean;
+  // Tablets: a taller card, for Share month's picture (the phone screen's height).
+  tall?: boolean;
   children: ReactNode;
 }
 
@@ -27,10 +32,19 @@ interface ModalCardProps {
 // with Cancel or Close on the left, the title in the middle and the main action on the right.
 // Used by routes presented as transparent modals, so the screen behind stays visible.
 // Dragging the top bar down closes it, the same as Cancel or Close (motion table: "Drag down to close").
-export function ModalCard({ title, left, right, children }: ModalCardProps) {
+// On a tablet it is a centred card, rounded all round, 560 wide (720 for the ritual form).
+export function ModalCard({ title, left, right, wide = false, tall = false, children }: ModalCardProps) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
+  const win = useWindowDimensions();
+  const tablet = layoutMode(win.width) !== 'phone';
+  const cardHeight = Math.min(
+    tall ? TABLET.tallCardHeight : wide ? TABLET.formCardHeight : TABLET.cardHeight,
+    win.height - insets.top - insets.bottom - 24
+  );
+  const cardTop = Math.max(insets.top + 12, Math.min(wide ? TABLET.formCardTop : TABLET.cardTop, (win.height - cardHeight) / 2));
+  const cardWidth = Math.min(wide ? TABLET.formCard : TABLET.card, win.width - 48);
   const dragY = useSharedValue(0);
   const dragStyle = useAnimatedStyle(() => ({ transform: [{ translateY: dragY.value }] }));
 
@@ -51,17 +65,30 @@ export function ModalCard({ title, left, right, children }: ModalCardProps) {
         // Rises from the bottom; with Reduce Motion it fades in instead.
         entering={reduceMotion ? FadeIn.duration(MOTION.sheet) : SlideInDown.duration(MOTION.sheet)}
         accessibilityViewIsModal
-        style={{
-          position: 'absolute',
-          top: Math.max(insets.top - 4, 12),
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: c.ground,
-          borderTopLeftRadius: LAYOUT.modalRadius,
-          borderTopRightRadius: LAYOUT.modalRadius,
-          overflow: 'hidden',
-        }}
+        style={
+          tablet
+            ? {
+                position: 'absolute',
+                top: cardTop,
+                left: (win.width - cardWidth) / 2,
+                width: cardWidth,
+                height: cardHeight,
+                backgroundColor: c.ground,
+                borderRadius: LAYOUT.modalRadius,
+                overflow: 'hidden',
+              }
+            : {
+                position: 'absolute',
+                top: Math.max(insets.top - 4, 12),
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: c.ground,
+                borderTopLeftRadius: LAYOUT.modalRadius,
+                borderTopRightRadius: LAYOUT.modalRadius,
+                overflow: 'hidden',
+              }
+        }
       >
         <Animated.View style={[{ flex: 1 }, dragStyle]}>
         <GestureDetector gesture={drag}>

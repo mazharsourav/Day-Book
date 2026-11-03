@@ -2,12 +2,14 @@ import { StorageNotice } from '@/components/StorageNotice';
 import { WeekDots } from '@/components/WeekDots';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
+import { Column } from '@/components/ui/Panes';
 import { BackRow, EmptyState, HintLine } from '@/components/ui/ScreenParts';
 import { COPY, streakLine } from '@/constants/copy';
-import { LAYOUT } from '@/constants/layout';
+import { LAYOUT, TABLET } from '@/constants/layout';
 import { TYPE } from '@/constants/type';
 import { useRituals } from '@/context/DataContext';
 import { useColors } from '@/hooks/useColors';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useToday } from '@/hooks/useToday';
 import { isEditableRitualDay } from '@/utils/dayRules';
 import { computeStreak } from '@/utils/streak';
@@ -25,6 +27,7 @@ export default function RitualScreen() {
   const { rituals, toggleCompleted } = useRituals();
   const ritual = rituals.find((r) => r.id === id);
   const today = useToday();
+  const tablet = useLayoutMode() !== 'phone';
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -58,6 +61,8 @@ export default function RitualScreen() {
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.ground }}>
       <StorageNotice />
+      {/* Tablets show a ritual beside Today's list; opened on its own it is one centred column. */}
+      <Column width={tablet ? TABLET.column : undefined}>
       <BackRow label={COPY.common.today}
         onBack={goBack}
         right={{
@@ -116,6 +121,7 @@ export default function RitualScreen() {
           <Button label={COPY.ritual.markDone} onPress={markDone} />
         )}
       </View>
+      </Column>
     </SafeAreaView>
   );
 }

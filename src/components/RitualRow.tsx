@@ -20,20 +20,28 @@ interface RitualRowProps {
   last: boolean;
   onToggle: (id: string) => void;
   onOpen: (id: string) => void;
+  // Tablets: the ritual shown beside the list sits on a grey pill (frame D).
+  chosen?: boolean;
 }
 
 // One ritual on Today: the circle, the name with its streak, and the ritual's icon at the right.
 // The order never changes when something is ticked; a done name just turns quiet grey.
-export function RitualRow({ ritual, done, streak, locked, last, onToggle, onOpen }: RitualRowProps) {
+export function RitualRow({ ritual, done, streak, locked, last, onToggle, onOpen, chosen = false }: RitualRowProps) {
   const c = useColors();
   const { Icon } = getRitualIcon(ritual.icon);
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: LAYOUT.rowGap, minHeight: LAYOUT.rowMinHeight }}>
+    <View
+      style={[
+        { flexDirection: 'row', alignItems: 'center', gap: LAYOUT.rowGap, minHeight: LAYOUT.rowMinHeight },
+        chosen && { backgroundColor: c.surface, borderRadius: LAYOUT.noteRadius, marginHorizontal: -10, paddingHorizontal: 10 },
+      ]}
+    >
       <TickCircle checked={done} name={ritual.name} locked={locked} onPress={() => onToggle(ritual.id)} />
       <Pressable
         onPress={() => onOpen(ritual.id)}
         accessibilityRole="button"
+        accessibilityState={chosen ? { selected: true } : undefined}
         accessibilityLabel={ritualNameLabel(ritual.name, streak)}
         style={{ flex: 1, minWidth: 0, minHeight: LAYOUT.smallButtonHeight, paddingVertical: 10, justifyContent: 'center' }}
       >
@@ -43,7 +51,7 @@ export function RitualRow({ ritual, done, streak, locked, last, onToggle, onOpen
       <View style={{ opacity: 0.85 }} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <Icon size={20} color={c.muted} strokeWidth={1.75} />
       </View>
-      {!last && (
+      {!last && !chosen && (
         <View
           style={{ position: 'absolute', left: LAYOUT.rowLineInset, right: 0, bottom: 0, height: 1, backgroundColor: c.line }}
         />

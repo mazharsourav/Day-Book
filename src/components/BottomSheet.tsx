@@ -1,10 +1,10 @@
 import { ColorTokens } from '@/constants/Colors';
-import { LAYOUT } from '@/constants/layout';
+import { LAYOUT, TABLET } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { useColors } from '@/hooks/useColors';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Modal, Pressable, StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { AccessibilityInfo, Animated, Easing, Modal, Pressable, StyleSheet, View } from 'react-native';import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface BottomSheetProps {
@@ -24,6 +24,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
   const c = useColors();
   const styles = useMemo(() => createStyles(c), [c]);
   const insets = useSafeAreaInsets();
+  const tablet = useLayoutMode() !== 'phone';
   const [progress] = useState(() => new Animated.Value(0));
   const [dragY] = useState(() => new Animated.Value(0));
   const [still] = useState(() => new Animated.Value(0));
@@ -68,7 +69,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
   return (
     <Modal visible={mounted} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       {/* Gestures inside a modal need their own root view on Android. */}
-      <GestureHandlerRootView style={styles.root}>
+      <GestureHandlerRootView style={[styles.root, tablet && styles.rootCentred]}>
         <Animated.View style={[styles.backdrop, { opacity: progress }]}>
           <Pressable style={styles.backdropPress} onPress={onClose} accessibilityRole="button" accessibilityLabel="Dismiss" />
         </Animated.View>
@@ -78,8 +79,9 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
           onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
           style={[
             styles.sheet,
+            tablet && styles.sheetCentred,
             {
-              paddingBottom: Math.max(insets.bottom, 12) + 12,
+              paddingBottom: tablet ? 24 : Math.max(insets.bottom, 12) + 12,
               opacity: reduceMotion ? progress : 1,
               transform: [{ translateY: Animated.add(rise, dragY) }],
             },
@@ -87,7 +89,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
         >
           <GestureDetector gesture={drag}>
             <View style={styles.handleZone}>
-              <View style={styles.handle} />
+              <View style={[styles.handle, tablet && { opacity: 0 }]} />
             </View>
           </GestureDetector>
           {children}
@@ -102,6 +104,16 @@ function createStyles(c: ColorTokens) {
     root: {
       flex: 1,
       justifyContent: 'flex-end',
+    },
+    // Tablets: sheets stay centred cards 560 wide (board chapter 10).
+    rootCentred: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    sheetCentred: {
+      width: TABLET.card,
+      borderRadius: LAYOUT.sheetRadius,
+      boxShadow: '0px 12px 40px rgba(0, 0, 0, 0.18)',
     },
     backdrop: {
       position: 'absolute',
