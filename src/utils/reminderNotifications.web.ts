@@ -15,14 +15,6 @@ export async function askPermission(): Promise<PhonePermission> {
 
 export async function applyReminders(_plan: PlannedReminder[], _stillWanted: (note: NoteData) => boolean): Promise<void> {}
 
-export function getReminderTestInfo(): null {
-  return null;
-}
-
-export function getPlannedToday(): never[] {
-  return [];
-}
-
 export function listenForTaps(_onTap: (data: unknown) => void): () => void {
   return () => {};
 }

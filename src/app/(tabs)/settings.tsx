@@ -1,6 +1,5 @@
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { BlockedBox, PermissionSheet, TimeSheet } from '@/components/ReminderSheets';
-import { ReminderTestInfo } from '@/components/ReminderTestInfo';
 import { StorageNotice } from '@/components/StorageNotice';
 import { AppText } from '@/components/ui/AppText';
 import { Group, GroupFoot, GroupRow, GroupTitle } from '@/components/ui/Group';
@@ -190,8 +189,6 @@ export default function SettingsScreen() {
         )}
         <Group>{[...reminderRows('evening'), ...reminderRows('morning')]}</Group>
         <GroupFoot>{reminder.supported ? COPY.settings.remindersFoot : COPY.settings.remindersUnsupported}</GroupFoot>
-        {/* TEMPORARY: Expo Go reminder test, development only. */}
-        {__DEV__ && reminder.supported && <ReminderTestInfo />}
       </>
     ),
     appearance: <Segmented options={APPEARANCE} value={preference} onChange={setPreference} />,

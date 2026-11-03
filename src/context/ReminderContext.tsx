@@ -26,11 +26,8 @@ import { AppState } from 'react-native';
 // Preferences, kept apart from the rituals and not part of a backup (like light and dark).
 // The key is 1.0.0's, so its `{ enabled }` is read and moved to the new shape in place.
 const SETTINGS_KEY = 'daybook:reminder';
+// Which notes already went out today, so a note is never sent twice (see alreadySentToday).
 const SENT_KEY = 'daybook:reminder-sent';
-
-// TEMPORARY (Mazhar, 2026-11-03): "never sends a note twice" is off while reminders are tested, so a
-// reminder can be set again and again on the same day. Set back to true after testing.
-export const ONCE_A_DAY = false;
 
 interface ReminderContextValue {
   // False in a browser and in Expo Go, where there are no phone notifications.
@@ -43,8 +40,6 @@ interface ReminderContextValue {
   // After "Continue": Android asks, then the reminder is on whatever the answer. If the answer was
   // Don't allow, the blocked box shows the way to the phone's settings.
   allowAndTurnOn: (kind: ReminderKind) => Promise<void>;
-  // TEMPORARY (Expo Go reminder test): forget today's "already sent" notes and plan again.
-  resetSentForTest: () => Promise<void>;
 }
 
 const ReminderContext = createContext<ReminderContextValue | null>(null);
@@ -99,7 +94,7 @@ export function ReminderProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     const id = setTimeout(async () => {
       try {
-        const raw = ONCE_A_DAY ? await AsyncStorage.getItem(SENT_KEY) : null;
+        const raw = await AsyncStorage.getItem(SENT_KEY);
         const sent: SentRecords = raw ? JSON.parse(raw) : {};
         const next = planAll(settings, rituals, tasks, new Date(), sent);
         if (cancelled) return;
@@ -149,14 +144,9 @@ export function ReminderProvider({ children }: { children: ReactNode }) {
     [save]
   );
 
-  const resetSentForTest = useCallback(async () => {
-    await AsyncStorage.removeItem(SENT_KEY);
-    setOpened((n) => n + 1);
-  }, []);
-
   const value = useMemo(
-    () => ({ supported: REMINDERS_SUPPORTED, settings, permission, setTime, setOn, allowAndTurnOn, resetSentForTest }),
-    [settings, permission, setTime, setOn, allowAndTurnOn, resetSentForTest]
+    () => ({ supported: REMINDERS_SUPPORTED, settings, permission, setTime, setOn, allowAndTurnOn }),
+    [settings, permission, setTime, setOn, allowAndTurnOn]
   );
 
   return <ReminderContext.Provider value={value}>{children}</ReminderContext.Provider>;
