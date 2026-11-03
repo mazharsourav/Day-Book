@@ -2,14 +2,14 @@
   "expo": {
     "name": "Day Book",
     "slug": "day-book",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "daybook",
     "userInterfaceStyle": "automatic",
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#248A3D",
+        "backgroundColor": "#1F5C46",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -30,7 +30,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "dark": {
-            "backgroundColor": "#1C1C1E",
+            "backgroundColor": "#0D1110",
             "image": "./assets/images/splash-icon-dark.png"
           }
         }
@@ -38,10 +38,11 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/android-icon-monochrome.png",
-          "color": "#248A3D"
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#1F5A45"
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

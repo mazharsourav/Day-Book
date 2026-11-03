@@ -3,26 +3,33 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { earliestMonth, getCalendarDays, monthPrefix, shiftMonth } from './calendar';
 
+// The grid is Sunday-first in 2.0.0 (design board).
 test('October 2026 starts on a Thursday and has 31 days', () => {
   const days = getCalendarDays(2026, 9);
-  assert.deepEqual(days.slice(0, 4), [null, null, null, 1]);
-  assert.equal(days.length, 3 + 31);
+  assert.deepEqual(days.slice(0, 5), [null, null, null, null, 1]);
+  assert.equal(days.length, 4 + 31);
   assert.equal(days[days.length - 1], 31);
 });
 
-test('a month that starts on Sunday gets six leading blanks', () => {
-  // 2026-02-01 is a Sunday.
-  const days = getCalendarDays(2026, 1);
-  assert.equal(days.filter((d) => d === null).length, 6);
-  assert.equal(days[6], 1);
-  assert.equal(days.length, 6 + 28);
-});
-
-test('a month that starts on Monday has no leading blanks', () => {
-  // 2026-06-01 is a Monday.
-  const days = getCalendarDays(2026, 5);
+test('a month that starts on Sunday has no leading blanks', () => {
+  // 2026-11-01 is a Sunday.
+  const days = getCalendarDays(2026, 10);
   assert.equal(days[0], 1);
   assert.equal(days.length, 30);
+});
+
+test('a month that starts on Monday gets one leading blank', () => {
+  // 2026-06-01 is a Monday.
+  const days = getCalendarDays(2026, 5);
+  assert.deepEqual(days.slice(0, 2), [null, 1]);
+  assert.equal(days.length, 1 + 30);
+});
+
+test('a month that starts on Saturday gets six leading blanks', () => {
+  // 2026-08-01 is a Saturday.
+  const days = getCalendarDays(2026, 7);
+  assert.equal(days.filter((d) => d === null).length, 6);
+  assert.equal(days[6], 1);
 });
 
 test('February in a leap year has 29 days', () => {

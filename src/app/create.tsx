@@ -1,203 +1,172 @@
-import { IconPicker } from "@/components/IconPicker";
-import { ColorTokens } from "@/constants/Colors";
-import { useRituals } from "@/context/RitualContext";
-import { useColors } from "@/hooks/useColors";
-import { RitualIconType } from "@/types";
-import * as Haptics from "expo-haptics";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ConfirmSheet } from '@/components/ConfirmSheet';
+import { IconPicker } from '@/components/IconPicker';
+import { Button } from '@/components/ui/Button';
+import { FieldLabel } from '@/components/ui/FieldLabel';
+import { ModalCard } from '@/components/ui/ModalCard';
+import { COPY, deleteRitualTitle } from '@/constants/copy';
+import { LAYOUT } from '@/constants/layout';
+import { MAX_FONT_SCALE } from '@/constants/type';
+import { useRituals } from '@/context/DataContext';
+import { useColors } from '@/hooks/useColors';
+import { RitualIconType } from '@/types';
+import { canSaveRitualName, cleanRitualName, RITUAL_NAME_MAX } from '@/utils/todayModel';
+import { haptic } from '@/utils/haptics';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Trash } from 'lucide-react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Keyboard, ScrollView, TextInput } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Used for both "New ritual" and, when an id is passed, "Edit ritual".
-export default function CreateRitualScreen() {
+// "New ritual", or "Edit ritual" when an id is passed: a card over the dimmed screen.
+export default function RitualFormScreen() {
   const router = useRouter();
   const c = useColors();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const { rituals, addRitual, updateRitual } = useRituals();
+  const { rituals, addRitual, updateRitual, deleteRitual } = useRituals();
 
   const existing = id ? rituals.find((r) => r.id === id) : undefined;
   const isEdit = existing !== undefined;
 
-  const [name, setName] = useState(existing?.name ?? "");
-  const [icon, setIcon] = useState<RitualIconType>(existing?.icon ?? "flame");
-  const [note, setNote] = useState(existing?.note ?? "");
-  const canSave = name.trim().length > 0;
+  const [name, setName] = useState(existing?.name ?? '');
+  const [icon, setIcon] = useState<RitualIconType>(existing?.icon ?? 'flame');
+  const [note, setNote] = useState(existing?.note ?? '');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const canSave = canSaveRitualName(name);
+
+  // When the note is being typed in, scroll so it sits above the keyboard, also when moving
+  // straight from the name field with the keyboard already up.
+  const scrollRef = useRef<ScrollView>(null);
+  const noteY = useRef(0);
+  const noteFocused = useRef(false);
+  useEffect(() => {
+    const sub = Keyboard.addListener('keyboardDidShow', () => {
+      if (noteFocused.current) scrollToY(scrollRef.current, noteY.current);
+    });
+    return () => sub.remove();
+  }, []);
+  const handleNoteFocus = () => {
+    noteFocused.current = true;
+    if (Keyboard.isVisible()) setTimeout(() => scrollToY(scrollRef.current, noteY.current), 50);
+  };
+
+  const close = () => router.back();
 
   const handleSave = () => {
     if (!canSave) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    haptic.save();
+    const changes = { name: cleanRitualName(name), icon, note: note.trim() };
     if (existing) {
-      updateRitual(existing.id, { name: name.trim(), icon, note: note.trim() });
+      updateRitual(existing.id, changes);
     } else {
-      addRitual({
-        id: Date.now().toString(),
-        name: name.trim(),
-        icon,
-        note: note.trim(),
-        completedDates: [],
-        createdAt: new Date().toISOString(),
-      });
+      addRitual({ id: Date.now().toString(), ...changes, completedDates: [], createdAt: new Date().toISOString() });
     }
-    router.back();
+    close();
   };
 
+  const handleDelete = () => {
+    if (!existing) return;
+    haptic.deleteConfirm();
+    setConfirmOpen(false);
+    // The ritual screen behind this form goes too, so return to Today.
+    router.dismissTo('/');
+    deleteRitual(existing.id);
+  };
+
+  const field = {
+    backgroundColor: c.surface,
+    borderRadius: LAYOUT.fieldRadius,
+    padding: LAYOUT.fieldPadding,
+    color: c.text,
+  } as const;
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <>
+      <ModalCard
+        title={isEdit ? COPY.ritual.editTitle : COPY.ritual.newTitle}
+        left={{ label: COPY.common.cancel, onPress: close, hint: 'Closes without saving' }}
+        right={{
+          label: isEdit ? COPY.common.save : COPY.common.add,
+          onPress: handleSave,
+          accent: true,
+          disabled: !canSave,
+          hint: canSave ? undefined : 'Enter a name first',
+        }}
       >
-        <View style={styles.header}>
-          <Pressable
-            style={styles.cancel}
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Cancel"
-            accessibilityHint="Closes without saving"
-          >
-            <Text style={styles.cancelText}>Cancel</Text>
-          </Pressable>
-          <Text style={styles.title} accessibilityRole="header">
-            {isEdit ? "Edit ritual" : "New ritual"}
-          </Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.nameInput}
-          value={name}
-          onChangeText={setName}
-          accessibilityLabel="Ritual name"
-          placeholder="Morning tea"
-          placeholderTextColor={c.inkMuted}
-          selectionColor={c.done}
-          maxLength={40}
-          autoFocus={!isEdit}
-          returnKeyType="done"
-          onSubmitEditing={handleSave}
-        />
-
-        <Text style={[styles.label, styles.labelSpaced]}>Icon</Text>
-        <IconPicker selected={icon} onSelect={setIcon} />
-
-        <Text style={[styles.label, styles.labelSpaced]}>Note (optional)</Text>
-        <TextInput
-          style={styles.noteInput}
-          value={note}
-          onChangeText={setNote}
-          accessibilityLabel="Note"
-          multiline
-          placeholder="Why you do it, or anything to remember"
-          placeholderTextColor={c.inkMuted}
-          selectionColor={c.done}
-          textAlignVertical="top"
-        />
-
-        <Pressable
-          style={[styles.primary, !canSave && styles.primaryDisabled]}
-          onPress={handleSave}
-          accessibilityRole="button"
-          accessibilityLabel={isEdit ? "Save changes" : "Add ritual"}
-          accessibilityHint={canSave ? undefined : "Enter a name first"}
-          accessibilityState={{ disabled: !canSave }}
+        <ScrollView
+          ref={scrollRef}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingTop: 10, paddingHorizontal: LAYOUT.screenPadding, paddingBottom: insets.bottom + 32 }}
         >
-          <Text style={[styles.primaryText, !canSave && styles.primaryTextDisabled]}>
-            {isEdit ? "Save changes" : "Add ritual"}
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+          <FieldLabel first>{COPY.ritual.nameLabel}</FieldLabel>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            accessibilityLabel="Ritual name"
+            placeholder={COPY.ritual.namePlaceholder}
+            placeholderTextColor={c.muted}
+            selectionColor={c.accent}
+            cursorColor={c.accent}
+            maxLength={RITUAL_NAME_MAX}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            autoFocus={!isEdit}
+            returnKeyType="done"
+            onSubmitEditing={handleSave}
+            style={[field, { minHeight: LAYOUT.fieldMinHeight, fontSize: 17, fontWeight: '500' }]}
+          />
+
+          <FieldLabel>{COPY.ritual.iconLabel}</FieldLabel>
+          <IconPicker selected={icon} onSelect={setIcon} />
+
+          <FieldLabel onLayout={(y) => (noteY.current = y)}>{COPY.ritual.noteLabel}</FieldLabel>
+          <TextInput
+            value={note}
+            onChangeText={setNote}
+            onFocus={handleNoteFocus}
+            onBlur={() => (noteFocused.current = false)}
+            accessibilityLabel="Note"
+            multiline
+            placeholder={COPY.ritual.notePlaceholder}
+            placeholderTextColor={c.muted}
+            selectionColor={c.accent}
+            cursorColor={c.accent}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            textAlignVertical="top"
+            style={[field, { minHeight: LAYOUT.fieldAreaMinHeight, fontSize: 16, lineHeight: 23, fontWeight: '500' }]}
+          />
+
+          {isEdit && (
+            <Button
+              variant="soft"
+              label={COPY.ritual.deleteRitual}
+              icon={Trash}
+              iconSize={18}
+              iconStrokeWidth={2}
+              accessibilityHint="Asks first"
+              onPress={() => setConfirmOpen(true)}
+              style={{ marginTop: 28 }}
+            />
+          )}
+        </ScrollView>
+      </ModalCard>
+
+      {existing && (
+        <ConfirmSheet
+          visible={confirmOpen}
+          title={deleteRitualTitle(existing.name)}
+          message={COPY.ritual.deleteBody}
+          cancelLabel={COPY.ritual.keepIt}
+          confirmLabel={COPY.ritual.deleteRitual}
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={handleDelete}
+        />
+      )}
+    </>
   );
 }
 
-function createStyles(c: ColorTokens) {
-  return StyleSheet.create({
-    safe: {
-      flex: 1,
-      backgroundColor: c.ground,
-    },
-    scroll: {
-      flex: 1,
-    },
-    content: {
-      paddingHorizontal: 20,
-      paddingBottom: 48,
-    },
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      minHeight: 52,
-      marginTop: 8,
-      marginBottom: 8,
-    },
-    cancel: {
-      minHeight: 44,
-      minWidth: 60,
-      justifyContent: "center",
-    },
-    cancelText: {
-      fontSize: 16,
-      color: c.ink,
-    },
-    title: {
-      fontSize: 17,
-      fontWeight: "700",
-      color: c.ink,
-    },
-    headerSpacer: {
-      minWidth: 60,
-    },
-    label: {
-      fontSize: 13,
-      fontWeight: "700",
-      color: c.inkMuted,
-      marginBottom: 8,
-    },
-    labelSpaced: {
-      marginTop: 24,
-    },
-    nameInput: {
-      backgroundColor: c.well,
-      borderRadius: 14,
-      paddingHorizontal: 14,
-      paddingVertical: 14,
-      fontSize: 16,
-      color: c.ink,
-    },
-    noteInput: {
-      backgroundColor: c.well,
-      borderRadius: 14,
-      paddingHorizontal: 14,
-      paddingVertical: 13,
-      fontSize: 15,
-      lineHeight: 21,
-      color: c.ink,
-      minHeight: 96,
-    },
-    primary: {
-      minHeight: 52,
-      borderRadius: 26,
-      backgroundColor: c.ink,
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: 28,
-    },
-    primaryDisabled: {
-      backgroundColor: c.well,
-    },
-    primaryText: {
-      fontSize: 17,
-      fontWeight: "700",
-      color: c.ground,
-    },
-    primaryTextDisabled: {
-      color: c.inkMuted,
-    },
-  });
+// Scrolls the form so a point sits a little below the top of the card.
+function scrollToY(scroll: ScrollView | null, y: number) {
+  scroll?.scrollTo({ y: Math.max(0, y - 30), animated: true });
 }

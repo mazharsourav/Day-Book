@@ -24,10 +24,9 @@ export function addDays(dateStr: string, days: number): string {
   return toDateString(d);
 }
 
-// The seven dates of the Monday-first week that contains `dateStr`.
+// The seven dates of the week that contains `dateStr`. Weeks start on Sunday.
 export function weekDatesFor(dateStr: string): string[] {
   const dow = fromDateString(dateStr).getDay(); // 0 is Sunday
-  const offsetToMonday = dow === 0 ? -6 : 1 - dow;
-  const monday = addDays(dateStr, offsetToMonday);
-  return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+  const sunday = addDays(dateStr, -dow);
+  return Array.from({ length: 7 }, (_, i) => addDays(sunday, i));
 }

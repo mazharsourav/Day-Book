@@ -1,7 +1,10 @@
 import { ColorTokens } from '@/constants/Colors';
+import { LAYOUT } from '@/constants/layout';
+import { MOTION } from '@/constants/motion';
 import { useColors } from '@/hooks/useColors';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface BottomSheetProps {
@@ -10,13 +13,21 @@ interface BottomSheetProps {
   children: ReactNode;
 }
 
+// How far down the sheet must be dragged, or how fast, before it closes.
+const CLOSE_DISTANCE = 80;
+const CLOSE_SPEED = 800;
+
 // The app's own bottom sheet: dimmed screen, rounded top, a small handle.
-// Closes on a tap outside or the Android back button.
+// It rises from the bottom over a fading dim (motion table, 320 ms); with Reduce Motion it fades.
+// Closes on a tap outside, the Android back button, or a drag down from its top edge.
 export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
   const c = useColors();
   const styles = useMemo(() => createStyles(c), [c]);
   const insets = useSafeAreaInsets();
   const [progress] = useState(() => new Animated.Value(0));
+  const [dragY] = useState(() => new Animated.Value(0));
+  const [still] = useState(() => new Animated.Value(0));
+  const [height, setHeight] = useState(400);
   const [mounted, setMounted] = useState(visible);
   const [reduceMotion, setReduceMotion] = useState(false);
 
@@ -30,53 +41,58 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
   }, []);
 
   useEffect(() => {
+    if (visible) dragY.setValue(0);
     Animated.timing(progress, {
       toValue: visible ? 1 : 0,
-      duration: reduceMotion ? 0 : visible ? 240 : 160,
+      duration: visible ? MOTION.sheet : MOTION.noticeOut,
       easing: visible ? Easing.out(Easing.exp) : Easing.out(Easing.quad),
       useNativeDriver: true,
     }).start(({ finished }) => {
       if (finished && !visible) setMounted(false);
     });
-  }, [visible, reduceMotion, progress]);
+  }, [visible, progress, dragY]);
+
+  // Dragging the handle area down moves the sheet with the finger; letting go far enough closes it.
+  const drag = Gesture.Pan()
+    .runOnJS(true)
+    .activeOffsetY(8)
+    .failOffsetX([-20, 20])
+    .onUpdate((e) => dragY.setValue(Math.max(0, e.translationY)))
+    .onEnd((e) => {
+      if (e.translationY > CLOSE_DISTANCE || e.velocityY > CLOSE_SPEED) onClose();
+      else Animated.timing(dragY, { toValue: 0, duration: MOTION.moveSettle, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    });
+
+  const rise = reduceMotion ? still : progress.interpolate({ inputRange: [0, 1], outputRange: [height, 0] });
 
   return (
-    <Modal
-      visible={mounted}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={onClose}
-    >
-      <View style={styles.root}>
+    <Modal visible={mounted} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
+      {/* Gestures inside a modal need their own root view on Android. */}
+      <GestureHandlerRootView style={styles.root}>
         <Animated.View style={[styles.backdrop, { opacity: progress }]}>
-          <Pressable
-            style={styles.backdropPress}
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel="Dismiss"
-          />
+          <Pressable style={styles.backdropPress} onPress={onClose} accessibilityRole="button" accessibilityLabel="Dismiss" />
         </Animated.View>
 
         <Animated.View
           accessibilityViewIsModal
+          onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
           style={[
             styles.sheet,
             {
               paddingBottom: Math.max(insets.bottom, 12) + 12,
-              opacity: progress,
-              transform: [
-                {
-                  translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [48, 0] }),
-                },
-              ],
+              opacity: reduceMotion ? progress : 1,
+              transform: [{ translateY: Animated.add(rise, dragY) }],
             },
           ]}
         >
-          <View style={styles.handle} />
+          <GestureDetector gesture={drag}>
+            <View style={styles.handleZone}>
+              <View style={styles.handle} />
+            </View>
+          </GestureDetector>
           {children}
         </Animated.View>
-      </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
@@ -93,29 +109,31 @@ function createStyles(c: ColorTokens) {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: c.scheme === 'dark' ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.4)',
+      backgroundColor: c.dim,
     },
     backdropPress: {
       flex: 1,
     },
     sheet: {
       backgroundColor: c.ground,
-      borderTopLeftRadius: 28,
-      borderTopRightRadius: 28,
-      borderTopWidth: 1,
-      borderLeftWidth: 1,
-      borderRightWidth: 1,
-      borderColor: c.hairline,
-      paddingHorizontal: 20,
+      borderTopLeftRadius: LAYOUT.sheetRadius,
+      borderTopRightRadius: LAYOUT.sheetRadius,
+      boxShadow: '0px -8px 30px rgba(0, 0, 0, 0.12)',
+      paddingHorizontal: LAYOUT.screenPadding,
+    },
+    // A taller strip than the handle itself, so it is easy to grab. Same spacing as before:
+    // 10 above the handle and 14 below it.
+    handleZone: {
       paddingTop: 10,
+      paddingBottom: 14,
+      marginHorizontal: -LAYOUT.screenPadding,
+      alignItems: 'center',
     },
     handle: {
-      alignSelf: 'center',
-      width: 36,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: c.hairline,
-      marginBottom: 18,
+      width: LAYOUT.handleWidth,
+      height: LAYOUT.handleHeight,
+      borderRadius: 3,
+      backgroundColor: c.line,
     },
   });
 }

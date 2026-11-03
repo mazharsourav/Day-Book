@@ -29,24 +29,27 @@ test('addDays moves across month, year and leap day', () => {
   assert.equal(addDays('2026-10-13', 0), '2026-10-13');
 });
 
-test('weekDatesFor starts on Monday', () => {
-  // 2026-10-13 is a Tuesday.
-  assert.deepEqual(weekDatesFor('2026-10-13'), [
-    '2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15',
-    '2026-10-16', '2026-10-17', '2026-10-18',
+// Weeks start on Sunday everywhere in 2.0.0 (design board).
+test('weekDatesFor starts on Sunday', () => {
+  // 2026-11-04 is a Wednesday, the day the board shows.
+  assert.deepEqual(weekDatesFor('2026-11-04'), [
+    '2026-11-01', '2026-11-02', '2026-11-03', '2026-11-04',
+    '2026-11-05', '2026-11-06', '2026-11-07',
   ]);
 });
 
-test('weekDatesFor treats Sunday as the last day of the week', () => {
-  // 2026-10-18 is a Sunday.
-  const week = weekDatesFor('2026-10-18');
-  assert.equal(week[0], '2026-10-12');
-  assert.equal(week[6], '2026-10-18');
+test('weekDatesFor treats Sunday as the first day and Saturday as the last', () => {
+  // 2026-10-18 is a Sunday and 2026-10-24 a Saturday.
+  assert.equal(weekDatesFor('2026-10-18')[0], '2026-10-18');
+  assert.equal(weekDatesFor('2026-10-24')[0], '2026-10-18');
+  assert.equal(weekDatesFor('2026-10-24')[6], '2026-10-24');
 });
 
-test('weekDatesFor crosses a month boundary', () => {
-  // 2026-11-01 is a Sunday.
-  const week = weekDatesFor('2026-11-01');
-  assert.equal(week[0], '2026-10-26');
-  assert.equal(week[6], '2026-11-01');
+test('weekDatesFor crosses a month and a year boundary', () => {
+  // 2026-10-29 is a Thursday; 2026-12-31 is a Thursday.
+  assert.equal(weekDatesFor('2026-10-29')[0], '2026-10-25');
+  assert.equal(weekDatesFor('2026-10-29')[6], '2026-10-31');
+  const week = weekDatesFor('2026-12-31');
+  assert.equal(week[0], '2026-12-27');
+  assert.equal(week[6], '2027-01-02');
 });

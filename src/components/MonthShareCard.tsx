@@ -1,6 +1,7 @@
-import { ColorTokens, mix } from '@/constants/Colors';
-import { MonthCardModel } from '@/utils/monthCard';
+import { ColorTokens } from '@/constants/Colors';
+import { MonthCardModel, SHARE_CARD } from '@/utils/monthCard';
 import { Text, View } from 'react-native';
+import { AppLogo } from './AppLogo';
 
 interface MonthShareCardProps {
   model: MonthCardModel;
@@ -12,16 +13,17 @@ interface MonthShareCardProps {
   width: number;
 }
 
-// The picture that is shared: one month of dots, in the same look as History.
-// No ritual names and no notes, by design.
+// The picture that is shared: one month of dots, in the same look as History, with the app logo.
+// No ritual names and no notes, by design. Text here does not grow with the phone's text size,
+// because the picture must keep its layout.
 export function MonthShareCard({ model, title, summary, colors: c, width }: MonthShareCardProps) {
   const u = width / 100;
   const height = (width * 16) / 9;
-  const gap = 1.6 * u;
-  const cell = (86 * u - 6 * gap) / 7;
-  const someFill = mix(c.done, c.ground, 0.34);
+  const gap = SHARE_CARD.gap * u;
+  const cell = (SHARE_CARD.dotsWidth * u - 6 * gap) / 7;
+  const muted = c.muted;
 
-  // Weeks of seven, Monday first, padded with empty slots at both ends.
+  // Weeks of seven, Sunday first, padded with empty slots at both ends.
   const slots: (MonthCardModel['days'][number] | null)[] = [
     ...Array.from({ length: model.leading }, () => null),
     ...model.days,
@@ -33,37 +35,29 @@ export function MonthShareCard({ model, title, summary, colors: c, width }: Mont
   return (
     <View
       accessible
+      accessibilityRole="image"
       accessibilityLabel={`${title}. ${summary}.`}
       style={{
         width,
         height,
         backgroundColor: c.ground,
-        paddingHorizontal: 7 * u,
-        paddingVertical: 14 * u,
+        paddingHorizontal: SHARE_CARD.padX * u,
+        paddingVertical: SHARE_CARD.padY * u,
         justifyContent: 'space-between',
       }}
     >
       <View>
         <Text
           numberOfLines={1}
-          adjustsFontSizeToFit
-          style={{
-            fontSize: 9 * u,
-            fontWeight: '700',
-            letterSpacing: -0.18 * u,
-            color: c.ink,
-          }}
+          allowFontScaling={false}
+          style={{ fontSize: SHARE_CARD.title * u, lineHeight: SHARE_CARD.title * u * 1.1, fontWeight: '700', letterSpacing: -0.02 * SHARE_CARD.title * u, color: c.text }}
         >
           {title}
         </Text>
         <Text
           numberOfLines={1}
-          style={{
-            fontSize: 4.2 * u,
-            color: c.inkMuted,
-            marginTop: 1.5 * u,
-            fontVariant: ['tabular-nums'],
-          }}
+          allowFontScaling={false}
+          style={{ fontSize: SHARE_CARD.summary * u, color: muted, marginTop: SHARE_CARD.summaryGap * u, fontVariant: ['tabular-nums'] }}
         >
           {summary}
         </Text>
@@ -77,42 +71,21 @@ export function MonthShareCard({ model, title, summary, colors: c, width }: Mont
               if (slot === null) return <View key={col} style={box} />;
 
               const fill =
-                slot.state === 'all'
-                  ? c.done
-                  : slot.state === 'some'
-                    ? someFill
-                    : slot.state === 'none'
-                      ? c.well
-                      : 'transparent';
-              const textColor =
-                slot.state === 'all' ? c.onDone : slot.state === 'some' ? c.ink : c.inkMuted;
+                slot.state === 'all' ? c.accent : slot.state === 'some' ? c.tint : slot.state === 'none' ? c.surface : 'transparent';
+              const textColor = slot.state === 'all' ? c.onAccent : slot.state === 'some' ? c.text : muted;
 
               return (
                 <View
                   key={col}
                   style={[
                     box,
-                    {
-                      backgroundColor: fill,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    },
-                    slot.state === 'none' && {
-                      boxShadow: `inset 0px ${0.45 * u}px 0px ${c.inset}`,
-                    },
-                    slot.state === 'future' && {
-                      borderWidth: Math.max(1, 0.3 * u),
-                      borderColor: c.hairline,
-                    },
+                    { backgroundColor: fill, alignItems: 'center', justifyContent: 'center' },
+                    slot.state === 'future' && { borderWidth: Math.max(1, 0.43 * u), borderColor: c.line },
                   ]}
                 >
                   <Text
-                    style={{
-                      fontSize: 3.7 * u,
-                      fontWeight: '600',
-                      color: textColor,
-                      fontVariant: ['tabular-nums'],
-                    }}
+                    allowFontScaling={false}
+                    style={{ fontSize: SHARE_CARD.number * u, fontWeight: '600', color: textColor, fontVariant: ['tabular-nums'] }}
                   >
                     {slot.day}
                   </Text>
@@ -123,21 +96,11 @@ export function MonthShareCard({ model, title, summary, colors: c, width }: Mont
         ))}
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2.4 * u }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            gap: 0.8 * u,
-            padding: u,
-            borderRadius: 50 * u,
-            backgroundColor: c.well,
-          }}
-        >
-          <View style={{ width: 2.4 * u, height: 2.4 * u, borderRadius: 1.2 * u, backgroundColor: c.ink, opacity: 0.35 }} />
-          <View style={{ width: 2.4 * u, height: 2.4 * u, borderRadius: 1.2 * u, backgroundColor: c.ink, opacity: 0.35 }} />
-          <View style={{ width: 2.4 * u, height: 2.4 * u, borderRadius: 1.2 * u, backgroundColor: c.done }} />
-        </View>
-        <Text style={{ fontSize: 4 * u, fontWeight: '700', color: c.ink }}>Day Book</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SHARE_CARD.markGap * u }}>
+        <AppLogo size={SHARE_CARD.logo * u} look={c.scheme} />
+        <Text allowFontScaling={false} style={{ fontSize: SHARE_CARD.mark * u, fontWeight: '700', color: c.text }}>
+          Day Book
+        </Text>
       </View>
     </View>
   );

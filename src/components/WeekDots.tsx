@@ -1,107 +1,47 @@
-import { ColorTokens } from "@/constants/Colors";
-import { useColors } from "@/hooks/useColors";
-import { Ritual } from "@/types";
-import { fromDateString, weekDatesFor } from "@/utils/dates";
-import { Check } from "lucide-react-native";
-import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { LAYOUT } from '@/constants/layout';
+import { TYPE } from '@/constants/type';
+import { useColors } from '@/hooks/useColors';
+import { ritualDayLabel } from '@/utils/a11y';
+import { ritualWeek } from '@/utils/todayModel';
+import { View } from 'react-native';
+import { AppText } from './ui/AppText';
+import { TickCircle } from './ui/TickCircle';
 
 interface WeekDotsProps {
-  ritual: Ritual;
+  name: string;
+  completedDates: string[];
   // YYYY-MM-DD of today.
   today: string;
-  // Tapping a day that is not in the future toggles it.
+  // Called only for today and yesterday.
   onToggleDate: (date: string) => void;
 }
 
-const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
-
-export function WeekDots({ ritual, today, onToggleDate }: WeekDotsProps) {
+// "This week" on the ritual screen: one circle per day, Sunday first.
+// Today and yesterday can be pressed. Older days are softer and read only. Days to come are faint dashed rings.
+export function WeekDots({ name, completedDates, today, onToggleDate }: WeekDotsProps) {
   const c = useColors();
-  const styles = useMemo(() => createStyles(c), [c]);
-  const weekDates = weekDatesFor(today);
-  const completedSet = new Set(ritual.completedDates);
 
   return (
-    <View style={styles.container}>
-      {weekDates.map((date, index) => {
-        const completed = completedSet.has(date);
-        const isToday = date === today;
-        const isFuture = date > today;
-        const dayName = fromDateString(date).toLocaleDateString(undefined, {
-          weekday: "long",
-          day: "numeric",
-        });
-        const state = isFuture ? "upcoming" : completed ? "taken" : "not taken";
-
-        return (
-          <Pressable
-            key={date}
-            style={styles.dayWrap}
-            disabled={isFuture}
-            onPress={() => onToggleDate(date)}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: completed, disabled: isFuture }}
-            accessibilityLabel={`${dayName}, ${state}`}
-            accessibilityHint={isFuture ? undefined : "Double tap to change"}
-          >
-            <View
-              style={[
-                styles.dot,
-                isFuture && styles.dotFuture,
-                completed && styles.dotDone,
-                isToday && styles.dotToday,
-              ]}
-            >
-              {completed && <Check size={16} color={c.onDone} strokeWidth={3} />}
-            </View>
-            <Text style={[styles.label, isToday && styles.labelToday]}>{DAY_LABELS[index]}</Text>
-          </Pressable>
-        );
-      })}
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 18, paddingHorizontal: 12, paddingBottom: 6 }}>
+      {ritualWeek(completedDates, today).map((day) => (
+        <View
+          key={day.date}
+          style={{ width: LAYOUT.dayColumn, alignItems: 'center', gap: 4, opacity: day.kind === 'future' ? 0.7 : 1 }}
+        >
+          <AppText style={[TYPE.tiny, { color: day.isToday ? c.text : c.muted }]}>{day.letter}</AppText>
+          <TickCircle
+            size="week"
+            checked={day.done}
+            name={name}
+            locked={day.kind !== 'editable'}
+            dashed={day.kind === 'future'}
+            faint={day.kind === 'future'}
+            strongRing={day.isToday}
+            spoken={ritualDayLabel(day.date, today, day.done)}
+            onPress={day.kind === 'editable' ? () => onToggleDate(day.date) : undefined}
+          />
+        </View>
+      ))}
     </View>
   );
-}
-
-function createStyles(c: ColorTokens) {
-  return StyleSheet.create({
-    container: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    dayWrap: {
-      flex: 1,
-      alignItems: "center",
-      gap: 6,
-      minHeight: 48,
-    },
-    dot: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
-      backgroundColor: c.well,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    dotFuture: {
-      backgroundColor: "transparent",
-      borderWidth: 1.5,
-      borderColor: c.hairline,
-    },
-    dotDone: {
-      backgroundColor: c.done,
-      borderWidth: 0,
-    },
-    dotToday: {
-      boxShadow: `0px 0px 0px 2px ${c.ground}, 0px 0px 0px 4px ${c.ink}`,
-    },
-    label: {
-      fontSize: 12,
-      fontWeight: "600",
-      color: c.inkMuted,
-    },
-    labelToday: {
-      color: c.ink,
-    },
-  });
 }

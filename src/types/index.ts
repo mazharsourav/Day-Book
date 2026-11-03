@@ -14,3 +14,18 @@ export interface Ritual {
     completedDates: string[] // YYYY-MM-DD
     createdAt: string // ISO date string
 }
+
+// A one-off task on exactly one day. Only a title; no notes, no repeating.
+export interface Task {
+    id: string;
+    title: string;
+    date: string // YYYY-MM-DD, the day it is planned for
+    done: boolean;
+    createdAt: string // ISO date string
+}
+
+// Everything Day Book keeps, saved together so a save is never half done.
+export interface AppData {
+    rituals: Ritual[];
+    tasks: Task[];
+}

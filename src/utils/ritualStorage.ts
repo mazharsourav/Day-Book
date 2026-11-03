@@ -5,5 +5,6 @@ export type { LoadResult, LoadStatus } from './ritualStorageCore';
 
 const storage = createRitualStorage(AsyncStorage);
 
-export const loadRituals = storage.load;
-export const saveRituals = storage.save;
+// Rituals and tasks, loaded and saved together.
+export const loadData = storage.load;
+export const saveData = storage.save;

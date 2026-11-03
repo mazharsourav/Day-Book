@@ -1,215 +1,139 @@
-import { FirstRunSteps } from "@/components/FirstRunSteps";
-import { RitualRow } from "@/components/RitualRow";
-import { ColorTokens } from "@/constants/Colors";
-import { useAppearance } from "@/context/AppearanceContext";
-import { useRituals } from "@/context/RitualContext";
-import { useColors } from "@/hooks/useColors";
-import { useToday } from "@/hooks/useToday";
-import { fromDateString } from "@/utils/dates";
-import { computeStreak } from "@/utils/streak";
-import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
-import { Moon, Plus, Settings, Sun } from "lucide-react-native";
-import { useCallback, useMemo } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StorageNotice } from '@/components/StorageNotice';
+import { DayStrip } from '@/components/DayStrip';
+import { RitualRow } from '@/components/RitualRow';
+import { AppText } from '@/components/ui/AppText';
+import { NewBar } from '@/components/ui/NewBar';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { EmptyState, HintLine, ScreenTitle } from '@/components/ui/ScreenParts';
+import { COPY } from '@/constants/copy';
+import { LAYOUT } from '@/constants/layout';
+import { MOTION } from '@/constants/motion';
+import { useRituals } from '@/context/DataContext';
+import { useColors } from '@/hooks/useColors';
+import { useToday } from '@/hooks/useToday';
+import { dayLabel } from '@/utils/a11y';
+import { isEditableRitualDay, selectedDayAfterRollover } from '@/utils/dayRules';
+import { useFocusRequest } from '@/utils/focusRequest';
+import { computeStreak } from '@/utils/streak';
+import { dayHeading, doneOn, showAllDoneNote, todayStrip, todaySubtitle } from '@/utils/todayModel';
+import { haptic } from '@/utils/haptics';
+import { useRouter } from 'expo-router';
+import { Plus } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
+import { ScrollView } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-function getDateLabel(today: string): string {
-  return fromDateString(today).toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
-
-export default function HomeScreen() {
+export default function TodayScreen() {
   const router = useRouter();
   const c = useColors();
-  const styles = useMemo(() => createStyles(c), [c]);
   const { rituals, toggleCompleted } = useRituals();
-  const { setPreference } = useAppearance();
   const today = useToday();
 
-  // "Taken today" is derived from the saved completedDates, so every screen agrees.
-  const takenCount = rituals.filter((r) => r.completedDates.includes(today)).length;
-  const totalCount = rituals.length;
-  const leftCount = totalCount - takenCount;
-  const allTaken = totalCount > 0 && takenCount === totalCount;
+  // The day being shown. At midnight it follows today only if it was showing today.
+  const [selected, setSelected] = useState(today);
+  const [shownToday, setShownToday] = useState(today);
+  if (shownToday !== today) {
+    setShownToday(today);
+    setSelected(selectedDayAfterRollover(selected, shownToday, today));
+  }
+  // A tapped evening reminder opens Today on today.
+  const focus = useFocusRequest();
+  const [seenFocus, setSeenFocus] = useState(focus?.n ?? 0);
+  if (focus && focus.n !== seenFocus) {
+    setSeenFocus(focus.n);
+    if (focus.tab === 'today') setSelected(focus.day);
+  }
+
+  const isToday = selected === today;
+  const editable = isEditableRitualDay(selected, today);
+  const total = rituals.length;
+  const done = doneOn(rituals, selected);
 
   const handleToggle = useCallback(
     (id: string) => {
-      toggleCompleted(id, today);
+      if (!isEditableRitualDay(selected, today)) return;
+      const ticking = rituals.some((r) => r.id === id && !r.completedDates.includes(selected));
+      toggleCompleted(id, selected);
+      // The last one of today: one soft tap, as "Nothing left for today" fades in after the bar.
+      if (ticking && selected === today && doneOn(rituals, selected) === rituals.length - 1) {
+        setTimeout(haptic.allDone, MOTION.allDoneWords);
+      }
     },
-    [toggleCompleted, today]
+    [toggleCompleted, rituals, selected, today]
   );
 
-  const handlePress = useCallback(
-    (id: string) => {
-      router.push(`/ritual/${id}`);
-    },
-    [router]
-  );
+  const handleOpen = useCallback((id: string) => router.push(`/ritual/${id}`), [router]);
+  const handleNew = () => router.push('/create');
 
-  const handleAdd = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push("/create");
+  const handleSelect = (date: string) => {
+    haptic.dayTap();
+    setSelected(date);
   };
 
-  // One tap flips between Light and Dark. A long press hands control back to the phone.
-  const isDark = c.scheme === "dark";
-  const handleAppearance = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setPreference(isDark ? "light" : "dark");
-  };
-  const handleMatchPhone = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setPreference("system");
-  };
+  if (total === 0) {
+    return (
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.ground }}>
+        <StorageNotice />
+        <ScreenTitle title={COPY.common.today} subtitle={todaySubtitle(today, today)} />
+        <EmptyState
+          title={COPY.today.firstRunTitle}
+          body={COPY.today.firstRunBody}
+          action={{ label: COPY.today.newRitual, icon: Plus, onPress: handleNew }}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Text style={styles.date}>{getDateLabel(today)}</Text>
-            <Text style={styles.title} accessibilityRole="header">
-              Today
-            </Text>
-          </View>
-          <View style={styles.actions}>
-            <Pressable
-              style={styles.roundButton}
-              onPress={handleAdd}
-              accessibilityRole="button"
-              accessibilityLabel="Add a ritual"
-            >
-              <Plus size={22} color={c.ink} strokeWidth={2} />
-            </Pressable>
-            <Pressable
-              style={styles.roundButton}
-              onPress={handleAppearance}
-              onLongPress={handleMatchPhone}
-              accessibilityRole="button"
-              accessibilityLabel={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              accessibilityHint="Long press to match your phone's setting"
-              accessibilityActions={[{ name: "longpress", label: "Match phone setting" }]}
-              onAccessibilityAction={(e) => {
-                if (e.nativeEvent.actionName === "longpress") handleMatchPhone();
-              }}
-            >
-              {isDark ? (
-                <Sun size={22} color={c.ink} strokeWidth={2} />
-              ) : (
-                <Moon size={22} color={c.ink} strokeWidth={2} />
-              )}
-            </Pressable>
-            <Pressable
-              style={styles.roundButton}
-              onPress={() => router.push("/settings")}
-              accessibilityRole="button"
-              accessibilityLabel="Settings"
-            >
-              <Settings size={22} color={c.ink} strokeWidth={2} />
-            </Pressable>
-          </View>
-        </View>
-
-        {totalCount > 0 && (
-          <View style={styles.summary}>
-            <Text style={styles.count}>
-              {allTaken ? `All ${totalCount} taken` : `${takenCount} of ${totalCount} taken`}
-            </Text>
-            <Text style={styles.left}>{allTaken ? "See you tomorrow" : `${leftCount} left`}</Text>
-          </View>
-        )}
-
-        <FlatList
-          data={rituals}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={<FirstRunSteps onAdd={handleAdd} />}
-          renderItem={({ item }) => (
-            <RitualRow
-              ritual={item}
-              isCompletedToday={item.completedDates.includes(today)}
-              streak={computeStreak(item.completedDates, today)}
-              onToggle={handleToggle}
-              onPress={handlePress}
-            />
-          )}
-          contentContainerStyle={[styles.list, rituals.length === 0 && styles.listEmpty]}
-          showsVerticalScrollIndicator={false}
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.ground }}>
+      <StorageNotice />
+      <ScrollView contentContainerStyle={{ paddingBottom: LAYOUT.newBarHeight + 12 }} showsVerticalScrollIndicator={false}>
+        <ScreenTitle title={dayHeading(selected, today)} subtitle={todaySubtitle(selected, today)} />
+        <DayStrip
+          days={todayStrip(today, selected, rituals)}
+          onSelect={handleSelect}
+          labelFor={(d) => dayLabel(d.date, today, doneOn(rituals, d.date), total)}
         />
-      </View>
+        <ProgressBar done={done} total={total} isToday={isToday} />
+
+        {/* Picking a day fades the list to the new one (motion table: 150 ms). */}
+        <Animated.View key={selected} entering={FadeIn.duration(MOTION.dayListFade)} style={{ paddingTop: 8, paddingHorizontal: LAYOUT.screenPadding }}>
+          {rituals.map((ritual, i) => (
+            <RitualRow
+              key={ritual.id}
+              ritual={ritual}
+              done={ritual.completedDates.includes(selected)}
+              streak={computeStreak(ritual.completedDates, today)}
+              locked={!editable}
+              last={i === rituals.length - 1}
+              onToggle={handleToggle}
+              onOpen={handleOpen}
+            />
+          ))}
+        </Animated.View>
+
+        {!editable && <HintLine>{COPY.today.olderDayHint}</HintLine>}
+        {showAllDoneNote(done, total, isToday) && (
+          // The words follow the bar: they fade in once it has reached the end.
+          <Animated.View entering={FadeIn.delay(MOTION.tickBar).duration(MOTION.allDoneWords)}>
+          <AppText
+            style={{
+              textAlign: 'center',
+              fontSize: 15,
+              lineHeight: 21,
+              fontWeight: '400',
+              color: c.muted,
+              paddingTop: 26,
+              paddingHorizontal: LAYOUT.screenPadding,
+            }}
+          >
+            {COPY.today.allDoneNote}
+          </AppText>
+          </Animated.View>
+        )}
+      </ScrollView>
+      <NewBar label={COPY.today.newRitual} onPress={handleNew} />
     </SafeAreaView>
   );
-}
-
-function createStyles(c: ColorTokens) {
-  return StyleSheet.create({
-    safe: {
-      flex: 1,
-      backgroundColor: c.ground,
-    },
-    container: {
-      flex: 1,
-      paddingHorizontal: 20,
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      paddingTop: 22,
-    },
-    headerText: {
-      flex: 1,
-    },
-    date: {
-      fontSize: 13,
-      fontWeight: "500",
-      color: c.inkMuted,
-    },
-    title: {
-      fontSize: 32,
-      fontWeight: "700",
-      color: c.ink,
-      letterSpacing: -0.6,
-      marginTop: 2,
-    },
-    actions: {
-      flexDirection: "row",
-      gap: 8,
-    },
-    roundButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      backgroundColor: c.well,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    summary: {
-      flexDirection: "row",
-      alignItems: "baseline",
-      justifyContent: "space-between",
-      marginTop: 20,
-      marginBottom: 6,
-    },
-    count: {
-      fontSize: 17,
-      fontWeight: "700",
-      color: c.ink,
-      fontVariant: ["tabular-nums"],
-    },
-    left: {
-      fontSize: 13,
-      color: c.inkMuted,
-      fontVariant: ["tabular-nums"],
-    },
-    list: {
-      paddingBottom: 24,
-    },
-    listEmpty: {
-      flexGrow: 1,
-    },
-  });
 }

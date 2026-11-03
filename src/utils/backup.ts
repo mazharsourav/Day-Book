@@ -1,12 +1,12 @@
-import type { Ritual } from '../types';
-import { DATA_VERSION, sanitizeRituals } from './ritualData';
+import type { AppData, Ritual, Task } from '../types';
+import { DATA_VERSION, sanitizeRituals, sanitizeTasks } from './ritualData';
 
 const BACKUP_APP = 'daybook';
 
-// The text of a backup file: everything needed to bring the rituals back.
-export function buildBackup(rituals: Ritual[], now: Date = new Date()): string {
+// The text of a backup file: everything needed to bring the rituals and tasks back.
+export function buildBackup(data: AppData, now: Date = new Date()): string {
   return JSON.stringify(
-    { app: BACKUP_APP, version: DATA_VERSION, exportedAt: now.toISOString(), rituals },
+    { app: BACKUP_APP, version: DATA_VERSION, exportedAt: now.toISOString(), rituals: data.rituals, tasks: data.tasks },
     null,
     2
   );
@@ -21,7 +21,7 @@ export function backupFileName(now: Date = new Date()): string {
 }
 
 export type ParseBackupResult =
-  | { ok: true; rituals: Ritual[]; dropped: number; exportedAt: string | null }
+  | { ok: true; rituals: Ritual[]; tasks: Task[]; dropped: number; exportedAt: string | null }
   // 'unreadable': not JSON. 'not-backup': JSON, but not a Day Book backup. 'newer': from a later app version.
   | { ok: false; reason: 'unreadable' | 'not-backup' | 'newer' };
 
@@ -43,9 +43,11 @@ export function parseBackup(text: string, now: Date = new Date()): ParseBackupRe
   if (file.version > DATA_VERSION) return { ok: false, reason: 'newer' };
 
   const { rituals, dropped } = sanitizeRituals(file.rituals, now);
+  // 1.0.0 backups have no tasks; restoring one leaves Day Book with none.
+  const t = file.version >= 2 ? sanitizeTasks(file.tasks, now) : { tasks: [], dropped: 0 };
   const exportedAt =
     typeof file.exportedAt === 'string' && !Number.isNaN(Date.parse(file.exportedAt))
       ? file.exportedAt
       : null;
-  return { ok: true, rituals, dropped, exportedAt };
+  return { ok: true, rituals, tasks: t.tasks, dropped: dropped + t.dropped, exportedAt };
 }

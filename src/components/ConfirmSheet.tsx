@@ -1,9 +1,9 @@
 import { BottomSheet } from '@/components/BottomSheet';
-import { ColorTokens } from '@/constants/Colors';
+import { TYPE } from '@/constants/type';
 import { useColors } from '@/hooks/useColors';
-import { Trash } from 'lucide-react-native';
-import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Trash, type LucideIcon } from 'lucide-react-native';
+import { AppText } from './ui/AppText';
+import { Button } from './ui/Button';
 
 interface ConfirmSheetProps {
   visible: boolean;
@@ -11,95 +11,44 @@ interface ConfirmSheetProps {
   message: string;
   // The safe choice, shown first and strongest.
   cancelLabel: string;
-  // The destructive choice, shown second with a trash icon.
+  // The other choice, shown second with an icon.
   confirmLabel: string;
+  confirmIcon?: LucideIcon;
   onCancel: () => void;
   onConfirm: () => void;
 }
 
-// Confirmation in the app's own look, used instead of the system pop-up.
+// A question in the app's own look, used instead of the system pop-up. The safe answer is the pine button.
 export function ConfirmSheet({
   visible,
   title,
   message,
   cancelLabel,
   confirmLabel,
+  confirmIcon = Trash,
   onCancel,
   onConfirm,
 }: ConfirmSheetProps) {
   const c = useColors();
-  const styles = useMemo(() => createStyles(c), [c]);
 
   return (
     <BottomSheet visible={visible} onClose={onCancel}>
-      <Text style={styles.title} accessibilityRole="header">
+      <AppText accessibilityRole="header" style={TYPE.dayTitle}>
         {title}
-      </Text>
-      <Text style={styles.message}>{message}</Text>
-
-      <Pressable
-        style={styles.keep}
-        onPress={onCancel}
-        accessibilityRole="button"
-        accessibilityLabel={cancelLabel}
-      >
-        <Text style={styles.keepText}>{cancelLabel}</Text>
-      </Pressable>
-
-      <Pressable
-        style={styles.remove}
+      </AppText>
+      <AppText style={{ fontSize: 16, lineHeight: 23, fontWeight: '400', color: c.muted, marginTop: 8, marginBottom: 22 }}>
+        {message}
+      </AppText>
+      <Button label={cancelLabel} onPress={onCancel} />
+      <Button
+        variant="soft"
+        label={confirmLabel}
+        icon={confirmIcon}
+        iconSize={18}
+        iconStrokeWidth={2}
         onPress={onConfirm}
-        accessibilityRole="button"
-        accessibilityLabel={confirmLabel}
-      >
-        <Trash size={18} color={c.ink} strokeWidth={2} />
-        <Text style={styles.removeText}>{confirmLabel}</Text>
-      </Pressable>
+        style={{ marginTop: 10 }}
+      />
     </BottomSheet>
   );
-}
-
-function createStyles(c: ColorTokens) {
-  return StyleSheet.create({
-    title: {
-      fontSize: 20,
-      fontWeight: '700',
-      color: c.ink,
-      letterSpacing: -0.3,
-    },
-    message: {
-      fontSize: 15,
-      lineHeight: 21,
-      color: c.inkMuted,
-      marginTop: 6,
-      marginBottom: 22,
-    },
-    keep: {
-      minHeight: 52,
-      borderRadius: 26,
-      backgroundColor: c.ink,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    keepText: {
-      fontSize: 17,
-      fontWeight: '700',
-      color: c.ground,
-    },
-    remove: {
-      flexDirection: 'row',
-      gap: 8,
-      minHeight: 52,
-      borderRadius: 26,
-      backgroundColor: c.well,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 10,
-    },
-    removeText: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: c.ink,
-    },
-  });
 }

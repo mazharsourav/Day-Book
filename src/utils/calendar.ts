@@ -3,10 +3,9 @@ export interface MonthView {
   month: number; // 0 is January
 }
 
-// Cells for a Monday-first month grid: leading nulls for the empty cells, then 1..N.
+// Cells for a Sunday-first month grid: leading nulls for the empty cells, then 1..N.
 export function getCalendarDays(year: number, month: number): (number | null)[] {
-  const firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
-  const offset = firstDay === 0 ? 6 : firstDay - 1;
+  const offset = new Date(year, month, 1).getDay(); // 0 is Sunday
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const days: (number | null)[] = [];
   for (let i = 0; i < offset; i++) days.push(null);
