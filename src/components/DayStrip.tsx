@@ -1,12 +1,12 @@
 import { LAYOUT } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
+import { EASE } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import type { StripDay } from '@/utils/todayModel';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
-  Easing,
   FadeIn,
   interpolateColor,
   SharedValue,
@@ -32,7 +32,7 @@ const PAD_TOP = 18;
 const CIRCLE_INSET = (LAYOUT.dayColumn - LAYOUT.dayCircle) / 2;
 
 // A week of days, Sunday first: the letter, the date in a circle, and a small dot for how much was done.
-// The chosen day is a dark circle that glides to a newly chosen day (motion table: 220 ms), and each
+// The chosen day is a dark circle that glides to a newly chosen day (motion table: medium), and each
 // number turns light as the circle passes under it. Disabled days (days to come on Today, past days
 // in the task form) are faint and cannot be chosen.
 export function DayStrip({ days, onSelect, labelFor, highlight }: DayStripProps) {
@@ -60,7 +60,7 @@ export function DayStrip({ days, onSelect, labelFor, highlight }: DayStripProps)
     }
     // The first time, after a week without the chosen day, or with Reduce Motion, it simply appears.
     const glide = placed.current && !reduceMotion && shown.value === 1;
-    x.value = glide ? withTiming(target, { duration: MOTION.dayPick, easing: Easing.out(Easing.cubic) }) : target;
+    x.value = glide ? withTiming(target, { duration: MOTION.dayPick, easing: EASE }) : target;
     shown.value = 1;
     placed.current = true;
   }, [target, reduceMotion, x, shown]);
@@ -106,10 +106,10 @@ export function DayStrip({ days, onSelect, labelFor, highlight }: DayStripProps)
               style={{ width: LAYOUT.dayCircle, height: LAYOUT.dayCircle, alignItems: 'center', justifyContent: 'center' }}
             >
               {lit && !selected && (
-                // The day under the finger lights up (motion table: 150 ms).
+                // The day under the finger lights up (motion table: fast).
                 <Animated.View
                   key={lit}
-                  entering={FadeIn.duration(MOTION.moveLight)}
+                  entering={FadeIn.duration(MOTION.moveLight).easing(EASE)}
                   style={{
                     position: 'absolute',
                     width: LAYOUT.dayCircle,

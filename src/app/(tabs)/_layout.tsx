@@ -1,5 +1,6 @@
 import { SideBar, TabBar, type TabKey } from '@/components/ui/TabBar';
 import { MOTION } from '@/constants/motion';
+import { RN_EASE } from '@/constants/easing';
 import { useTasks } from '@/context/DataContext';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useToday } from '@/hooks/useToday';
@@ -43,12 +44,12 @@ export default function TabLayout() {
   const mode = useLayoutMode();
   return (
     <Tabs
-      // Switching tabs cross-fades the content (motion table: 150 ms, no sliding).
+      // Switching tabs cross-fades the content (motion table: fast, no sliding).
       screenOptions={{
         tabBarPosition: mode === 'wide' ? 'left' : 'bottom',
         headerShown: false,
         animation: 'fade',
-        transitionSpec: { animation: 'timing', config: { duration: MOTION.tabFade } },
+        transitionSpec: { animation: 'timing', config: { duration: MOTION.tabFade, easing: RN_EASE } },
       }}
       tabBar={(props) => <AppTabBar {...props} />}
     >

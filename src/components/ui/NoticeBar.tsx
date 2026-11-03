@@ -1,5 +1,6 @@
 import { LAYOUT } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
+import { EASE, EASE_OUT } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import { Pressable, View } from 'react-native';
 import Animated, { FadeOut, SlideInUp } from 'react-native-reanimated';
@@ -15,8 +16,8 @@ export function NoticeBar({ message, action }: NoticeBarProps) {
   const c = useColors();
   return (
     <Animated.View
-      entering={SlideInUp.duration(MOTION.noticeIn)}
-      exiting={FadeOut.duration(MOTION.noticeOut)}
+      entering={SlideInUp.duration(MOTION.noticeIn).easing(EASE)}
+      exiting={FadeOut.duration(MOTION.noticeOut).easing(EASE_OUT)}
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
       style={{ paddingHorizontal: LAYOUT.toastInset, paddingTop: 8 }}

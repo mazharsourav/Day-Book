@@ -8,6 +8,7 @@ import { COPY } from '@/constants/copy';
 import { LAYOUT, TABLET } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
+import { EASE } from '@/constants/easing';
 import { useRituals } from '@/context/DataContext';
 import { useColors } from '@/hooks/useColors';
 import { useToday } from '@/hooks/useToday';
@@ -20,7 +21,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Share } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
-import Animated, { Easing, FadeIn, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // The card is drawn 232 wide on the board's 390 by 844 phone, and smaller when the screen is shorter.
@@ -52,10 +53,10 @@ export default function ShareMonthScreen() {
   // The card starts in the mode the app is in. The choice only changes the picture.
   const [look, setLook] = useState<'light' | 'dark'>(c.scheme);
   const reduceMotion = useReducedMotion();
-  // The card fades in with an 8 point rise when the screen opens (motion table: 220 ms).
+  // The card fades in with an 8 point rise when the screen opens (motion table: medium).
   const shown = useSharedValue(0);
   useEffect(() => {
-    shown.value = withTiming(1, { duration: MOTION.shareCard, easing: Easing.out(Easing.cubic) });
+    shown.value = withTiming(1, { duration: MOTION.shareCard, easing: EASE });
   }, [shown]);
   const riseStyle = useAnimatedStyle(() => ({
     opacity: shown.value,
@@ -97,10 +98,10 @@ export default function ShareMonthScreen() {
       >
         <View style={{ alignItems: 'center', marginTop: 6 }}>
           {/* A hairline edge so a light card still shows on a light screen. It is not part of the picture.
-              The card fades in with an 8 point rise; changing Light and Dark fades the card (220 ms). */}
+              The card fades in with an 8 point rise; changing Light and Dark fades the card (medium). */}
           <Animated.View style={[{ borderWidth: 1, borderColor: c.line, borderRadius: 14, overflow: 'hidden' }, riseStyle]}>
             <View ref={cardRef} collapsable={false}>
-              <Animated.View key={look} entering={FadeIn.duration(MOTION.shareCard)}>
+              <Animated.View key={look} entering={FadeIn.duration(MOTION.shareCard).easing(EASE)}>
                 <MonthShareCard
                   model={model}
                   title={title}

@@ -1,11 +1,12 @@
 import { LAYOUT, TABLET } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
+import { EASE } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import { layoutMode } from '@/utils/layoutMode';
 import { ReactNode } from 'react';
 import { KeyboardAvoidingView, Pressable, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { Easing, FadeIn, SlideInDown, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, SlideInDown, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from './AppText';
 
@@ -55,7 +56,7 @@ export function ModalCard({ title, left, right, wide = false, tall = false, chil
     .onUpdate((e) => dragY.set(Math.max(0, e.translationY)))
     .onEnd((e) => {
       if (e.translationY > 80 || e.velocityY > 800) left.onPress();
-      else dragY.set(withTiming(0, { duration: MOTION.moveSettle, easing: Easing.out(Easing.cubic) }));
+      else dragY.set(withTiming(0, { duration: MOTION.moveSettle, easing: EASE }));
     });
 
   return (
@@ -63,7 +64,7 @@ export function ModalCard({ title, left, right, wide = false, tall = false, chil
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: c.dim }} />
       <Animated.View
         // Rises from the bottom; with Reduce Motion it fades in instead.
-        entering={reduceMotion ? FadeIn.duration(MOTION.sheet) : SlideInDown.duration(MOTION.sheet)}
+        entering={reduceMotion ? FadeIn.duration(MOTION.sheet).easing(EASE) : SlideInDown.duration(MOTION.sheet).easing(EASE)}
         accessibilityViewIsModal
         style={
           tablet

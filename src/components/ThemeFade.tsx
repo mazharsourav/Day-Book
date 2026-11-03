@@ -3,11 +3,12 @@ import { MOTION } from '@/constants/motion';
 import { useColors } from '@/hooks/useColors';
 import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import Animated, { FadeOut } from 'react-native-reanimated';
+import Animated, { Easing, FadeOut } from 'react-native-reanimated';
 
-// Light and Dark: the whole screen cross-fades, nothing flashes (motion table: 220 ms).
+// Light and Dark: the whole screen cross-fades, nothing flashes (motion table: fast).
 // When the mode changes, a cover in the old background colour sits over everything for one frame,
-// then fades away to show the screen in the new colours.
+// then fades away to show the screen in the new colours. An even fade with no soft end: on the
+// whole screen a soft end leaves a faint veil of the old colour, which reads as slow (Mazhar, 4 November 2026).
 export function ThemeFade() {
   const { scheme } = useColors();
   const [last, setLast] = useState(scheme);
@@ -29,7 +30,7 @@ export function ThemeFade() {
     <Animated.View
       key={cover.key}
       pointerEvents="none"
-      exiting={FadeOut.duration(MOTION.themeFade)}
+      exiting={FadeOut.duration(MOTION.themeFade).easing(Easing.linear)}
       style={[StyleSheet.absoluteFill, { backgroundColor: cover.color }]}
     />
   );

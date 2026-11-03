@@ -10,6 +10,7 @@ import { EmptyState, HintLine, ScreenTitle } from '@/components/ui/ScreenParts';
 import { COPY } from '@/constants/copy';
 import { LAYOUT, TABLET } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
+import { EASE } from '@/constants/easing';
 import { useRituals } from '@/context/DataContext';
 import { useColors } from '@/hooks/useColors';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
@@ -110,8 +111,8 @@ export default function TodayScreen() {
         />
         <ProgressBar done={done} total={total} isToday={isToday} />
 
-        {/* Picking a day fades the list to the new one (motion table: 150 ms). */}
-        <Animated.View key={selected} entering={FadeIn.duration(MOTION.dayListFade)} style={{ paddingTop: 8, paddingHorizontal: LAYOUT.screenPadding }}>
+        {/* Picking a day fades the list to the new one (motion table: fast). */}
+        <Animated.View key={selected} entering={FadeIn.duration(MOTION.dayListFade).easing(EASE)} style={{ paddingTop: 8, paddingHorizontal: LAYOUT.screenPadding }}>
           {rituals.map((ritual, i) => (
             <RitualRow
               key={ritual.id}
@@ -130,7 +131,7 @@ export default function TodayScreen() {
         {!editable && <HintLine>{COPY.today.olderDayHint}</HintLine>}
         {showAllDoneNote(done, total, isToday) && (
           // The words follow the bar: they fade in once it has reached the end.
-          <Animated.View entering={FadeIn.delay(MOTION.tickBar).duration(MOTION.allDoneWords)}>
+          <Animated.View entering={FadeIn.delay(MOTION.tickBar).duration(MOTION.allDoneWords).easing(EASE)}>
           <AppText
             style={{
               textAlign: 'center',
@@ -167,7 +168,7 @@ export default function TodayScreen() {
         leftWidth={TABLET.todayList[mode === 'wide' ? 'wide' : 'tablet']}
         left={<View style={{ flex: 1 }}>{list}</View>}
         right={
-          <Animated.View key={chosen.id} entering={FadeIn.duration(MOTION.dayListFade)} style={{ flex: 1 }}>
+          <Animated.View key={chosen.id} entering={FadeIn.duration(MOTION.dayListFade).easing(EASE)} style={{ flex: 1 }}>
             <RitualPane
               ritual={chosen}
               today={today}

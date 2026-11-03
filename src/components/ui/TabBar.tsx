@@ -3,6 +3,7 @@ import { LAYOUT, TABLET } from '@/constants/layout';
 import { COPY } from '@/constants/copy';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
+import { EASE } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import { badgeText, weekTabLabel } from '@/utils/a11y';
 import { Calendar, CircleCheck, ListChecks, Settings, type LucideIcon } from 'lucide-react-native';
@@ -70,7 +71,7 @@ export function TabBar({ tabs, active, onPress, openToday }: TabBarProps) {
               {key === 'week' && badge !== '' && (
                 <Animated.View
                   key={badge}
-                  entering={ZoomIn.duration(MOTION.badgePop)}
+                  entering={ZoomIn.duration(MOTION.badgePop).easing(EASE)}
                   style={{
                     position: 'absolute',
                     // The board puts it 5 above the icon and 8 right of the tab's centre.
@@ -150,7 +151,7 @@ export function SideBar({ tabs, active, onPress, openToday }: TabBarProps) {
             {key === 'week' && badge !== '' && (
               <Animated.View
                 key={badge}
-                entering={ZoomIn.duration(MOTION.badgePop)}
+                entering={ZoomIn.duration(MOTION.badgePop).easing(EASE)}
                 style={{
                   minWidth: 22,
                   height: 22,

@@ -1,6 +1,7 @@
 import { hitSlopFor, LAYOUT } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
+import { EASE } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import { ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { Children, isValidElement, ReactNode, useEffect } from 'react';
@@ -102,11 +103,11 @@ function ToggleSwitch({ on }: { on: boolean }) {
   const x = useSharedValue(on ? 1 : 0);
 
   useEffect(() => {
-    x.value = reduceMotion ? (on ? 1 : 0) : withTiming(on ? 1 : 0, { duration: MOTION.switchThumb });
+    x.value = reduceMotion ? (on ? 1 : 0) : withTiming(on ? 1 : 0, { duration: MOTION.switchThumb, easing: EASE });
   }, [on, reduceMotion, x]);
 
   const knob = useAnimatedStyle(() => ({ transform: [{ translateX: x.value * (LAYOUT.switchWidth - LAYOUT.switchKnob - 4) }] }));
-  // The track changes colour with the thumb (motion table: 150 ms).
+  // The track changes colour with the thumb (motion table: fast).
   const track = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(x.value, [0, 1], [c.ring, c.accent]) }));
 
   return (

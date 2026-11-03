@@ -32,80 +32,80 @@ export default function HowItWorksScreen() {
       <StorageNotice />
       {/* On a tablet it stays one column, centred, 560 wide (board chapter 10). */}
       <Column width={tablet ? TABLET.column : undefined}>
-      <BackRow label={COPY.how.back} onBack={goBack} />
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <View style={{ paddingTop: 6, paddingHorizontal: LAYOUT.screenPadding }}>
-          <AppText accessibilityRole="header" style={TYPE.screenTitle}>
-            {COPY.how.title}
-          </AppText>
-          <AppText style={{ fontSize: 17, lineHeight: 25, fontWeight: '500', color: c.muted, paddingTop: 12 }}>{COPY.how.lead}</AppText>
-        </View>
-
-        <Section title={rituals.title} body={rituals.body}>
-          {COPY.how.sampleRituals.map((r, i) => (
-            <SampleRow key={r.name} done={r.done} last={i === COPY.how.sampleRituals.length - 1}>
-              <View style={{ flex: 1 }}>
-                <AppText style={[TYPE.ritualName, r.done && { color: c.muted, fontWeight: '500' }]}>{r.name}</AppText>
-                <AppText style={[TYPE.small, { color: c.muted, marginTop: 1 }]}>{r.meta}</AppText>
-              </View>
-              <RitualIcon icon={r.icon} />
-            </SampleRow>
-          ))}
-        </Section>
-
-        <Section title={fixing.title} body={fixing.body}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
-            <Trio label={COPY.how.olderDays} sub={COPY.how.lookOnly}>
-              <TickCircle checked name="" size="week" locked />
-            </Trio>
-            <Trio label={COPY.common.yesterday} sub={COPY.how.canChange}>
-              <TickCircle checked name="" size="week" />
-            </Trio>
-            <Trio label={COPY.common.today} sub={COPY.how.canChange}>
-              <TickCircle checked={false} name="" size="week" strongRing />
-            </Trio>
+        <BackRow label={COPY.how.back} onBack={goBack} />
+        <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+          <View style={{ paddingTop: 6, paddingHorizontal: LAYOUT.screenPadding }}>
+            <AppText accessibilityRole="header" style={TYPE.screenTitle}>
+              {COPY.how.title}
+            </AppText>
+            <AppText style={{ fontSize: 17, lineHeight: 25, fontWeight: '500', color: c.muted, paddingTop: 12 }}>{COPY.how.lead}</AppText>
           </View>
-        </Section>
 
-        <Section title={week.title} body={week.body}>
-          {COPY.how.sampleTasks.map((t, i) => (
-            <SampleRow key={t.title} done={t.done} last={i === COPY.how.sampleTasks.length - 1}>
-              <AppText
-                style={[
-                  TYPE.row,
-                  { flex: 1 },
-                  t.done && { color: c.muted, textDecorationLine: 'line-through', textDecorationColor: c.muted },
-                ]}
-              >
-                {t.title}
-              </AppText>
-            </SampleRow>
-          ))}
-        </Section>
+          <Section title={rituals.title} body={rituals.body}>
+            {COPY.how.sampleRituals.map((r, i) => (
+              <SampleRow key={r.name} done={r.done} last={i === COPY.how.sampleRituals.length - 1}>
+                <View style={{ flex: 1 }}>
+                  <AppText style={[TYPE.ritualName, r.done && { color: c.muted, fontWeight: '500' }]}>{r.name}</AppText>
+                  <AppText style={[TYPE.small, { color: c.muted, marginTop: 1 }]}>{r.meta}</AppText>
+                </View>
+                <RitualIcon icon={r.icon} />
+              </SampleRow>
+            ))}
+          </Section>
 
-        <Section title={history.title} body={history.body}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
-            <Trio label={COPY.history.legendAll}>
-              <DayDot day={12} background={c.accent} color={c.onAccent} />
-            </Trio>
-            <Trio label={COPY.history.legendSome}>
-              <DayDot day={13} background={c.tint} color={c.text} />
-            </Trio>
-            <Trio label={COPY.history.legendNone}>
-              <DayDot day={14} background={c.surface} color={c.text} />
-            </Trio>
-          </View>
-        </Section>
+          <Section title={fixing.title} body={fixing.body}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+              <Trio label={COPY.how.olderDays} sub={COPY.how.lookOnly}>
+                <TickCircle checked name="" size="week" locked />
+              </Trio>
+              <Trio label={COPY.common.yesterday} sub={COPY.how.canChange}>
+                <TickCircle checked name="" size="week" />
+              </Trio>
+              <Trio label={COPY.common.today} sub={COPY.how.canChange}>
+                <TickCircle checked={false} name="" size="week" strongRing />
+              </Trio>
+            </View>
+          </Section>
 
-        <Section title={reminders.title} body={reminders.body}>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <TimePill label={COPY.how.rituals} value={timeLabel(DEFAULT_REMINDERS.evening, uses24)} />
-            <TimePill label={COPY.how.tasks} value={timeLabel(DEFAULT_REMINDERS.morning, uses24)} />
-          </View>
-        </Section>
+          <Section title={week.title} body={week.body}>
+            {COPY.how.sampleTasks.map((t, i) => (
+              <SampleRow key={t.title} done={t.done} last={i === COPY.how.sampleTasks.length - 1}>
+                <AppText
+                  style={[
+                    TYPE.row,
+                    { flex: 1 },
+                    t.done && { color: c.muted, textDecorationLine: 'line-through', textDecorationColor: c.muted },
+                  ]}
+                >
+                  {t.title}
+                </AppText>
+              </SampleRow>
+            ))}
+          </Section>
 
-        <Section title={data.title} body={data.body} />
-      </ScrollView>
+          <Section title={history.title} body={history.body}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+              <Trio label={COPY.history.legendAll}>
+                <DayDot day={12} background={c.accent} color={c.onAccent} />
+              </Trio>
+              <Trio label={COPY.history.legendSome}>
+                <DayDot day={13} background={c.tint} color={c.text} />
+              </Trio>
+              <Trio label={COPY.history.legendNone}>
+                <DayDot day={14} background={c.surface} color={c.text} />
+              </Trio>
+            </View>
+          </Section>
+
+          <Section title={reminders.title} body={reminders.body}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TimePill label={COPY.how.rituals} value={timeLabel(DEFAULT_REMINDERS.evening, uses24)} />
+              <TimePill label={COPY.how.tasks} value={timeLabel(DEFAULT_REMINDERS.morning, uses24)} />
+            </View>
+          </Section>
+
+          <Section title={data.title} body={data.body} />
+        </ScrollView>
       </Column>
     </SafeAreaView>
   );

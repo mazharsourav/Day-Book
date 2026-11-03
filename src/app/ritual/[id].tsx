@@ -63,64 +63,64 @@ export default function RitualScreen() {
       <StorageNotice />
       {/* Tablets show a ritual beside Today's list; opened on its own it is one centred column. */}
       <Column width={tablet ? TABLET.column : undefined}>
-      <BackRow label={COPY.common.today}
-        onBack={goBack}
-        right={{
-          label: COPY.common.edit,
-          hint: `Edit ${ritual.name}`,
-          onPress: () => router.push({ pathname: '/create', params: { id: ritual.id } }),
-        }}
-      />
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: LAYOUT.buttonHeight + insets.bottom + 48 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={{ paddingTop: 6, paddingHorizontal: LAYOUT.screenPadding }}>
-          <AppText accessibilityRole="header" style={TYPE.screenTitle}>
-            {ritual.name}
-          </AppText>
-          <AppText style={{ fontSize: 17, lineHeight: 22, fontWeight: '500', color: c.muted, marginTop: 6 }}>
-            {streak > 0 ? streakLine(streak) : COPY.ritual.noStreak}
-          </AppText>
+        <BackRow label={COPY.common.today}
+          onBack={goBack}
+          right={{
+            label: COPY.common.edit,
+            hint: `Edit ${ritual.name}`,
+            onPress: () => router.push({ pathname: '/create', params: { id: ritual.id } }),
+          }}
+        />
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: LAYOUT.buttonHeight + insets.bottom + 48 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ paddingTop: 6, paddingHorizontal: LAYOUT.screenPadding }}>
+            <AppText accessibilityRole="header" style={TYPE.screenTitle}>
+              {ritual.name}
+            </AppText>
+            <AppText style={{ fontSize: 17, lineHeight: 22, fontWeight: '500', color: c.muted, marginTop: 6 }}>
+              {streak > 0 ? streakLine(streak) : COPY.ritual.noStreak}
+            </AppText>
+          </View>
+
+          <SectionLabel>{COPY.ritual.thisWeek}</SectionLabel>
+          <WeekDots name={ritual.name} completedDates={ritual.completedDates} today={today} onToggleDate={toggle} />
+          <HintLine top={6}>{COPY.ritual.changeRule}</HintLine>
+
+          {ritual.note.trim().length > 0 && (
+            <>
+              <SectionLabel>{COPY.ritual.note}</SectionLabel>
+              <View
+                style={{
+                  marginTop: 6,
+                  marginHorizontal: LAYOUT.screenPadding,
+                  backgroundColor: c.surface,
+                  borderRadius: LAYOUT.noteRadius,
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                }}
+              >
+                <AppText style={TYPE.note}>{ritual.note}</AppText>
+              </View>
+            </>
+          )}
+        </ScrollView>
+
+        <View style={{ position: 'absolute', left: LAYOUT.screenPadding, right: LAYOUT.screenPadding, bottom: Math.max(insets.bottom, 18) + 16 }}>
+          {doneToday ? (
+            <Button
+              variant="soft"
+              label={COPY.ritual.doneToday}
+              icon={Check}
+              iconStrokeWidth={3}
+              accessibilityHint={`Goes back to ${COPY.common.today}`}
+              onPress={goBack}
+            />
+          ) : (
+            <Button label={COPY.ritual.markDone} onPress={markDone} />
+          )}
         </View>
-
-        <SectionLabel>{COPY.ritual.thisWeek}</SectionLabel>
-        <WeekDots name={ritual.name} completedDates={ritual.completedDates} today={today} onToggleDate={toggle} />
-        <HintLine top={6}>{COPY.ritual.changeRule}</HintLine>
-
-        {ritual.note.trim().length > 0 && (
-          <>
-            <SectionLabel>{COPY.ritual.note}</SectionLabel>
-            <View
-              style={{
-                marginTop: 6,
-                marginHorizontal: LAYOUT.screenPadding,
-                backgroundColor: c.surface,
-                borderRadius: LAYOUT.noteRadius,
-                paddingVertical: 14,
-                paddingHorizontal: 16,
-              }}
-            >
-              <AppText style={TYPE.note}>{ritual.note}</AppText>
-            </View>
-          </>
-        )}
-      </ScrollView>
-
-      <View style={{ position: 'absolute', left: LAYOUT.screenPadding, right: LAYOUT.screenPadding, bottom: Math.max(insets.bottom, 18) + 16 }}>
-        {doneToday ? (
-          <Button
-            variant="soft"
-            label={COPY.ritual.doneToday}
-            icon={Check}
-            iconStrokeWidth={3}
-            accessibilityHint={`Goes back to ${COPY.common.today}`}
-            onPress={goBack}
-          />
-        ) : (
-          <Button label={COPY.ritual.markDone} onPress={markDone} />
-        )}
-      </View>
       </Column>
     </SafeAreaView>
   );

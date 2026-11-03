@@ -2,6 +2,7 @@ import { COPY } from '@/constants/copy';
 import { LAYOUT } from '@/constants/layout';
 import { MOTION, UNDO_MS, undoDuration } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
+import { EASE, EASE_OUT } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Pressable } from 'react-native';
@@ -61,8 +62,8 @@ export function UndoNote({ message, onUndo, onClose, bottom = 78 }: UndoNoteProp
 
   return (
     <Animated.View
-      entering={FadeInDown.duration(MOTION.deleteFold)}
-      exiting={FadeOut.duration(MOTION.noticeOut)}
+      entering={FadeInDown.duration(MOTION.deleteFold).easing(EASE)}
+      exiting={FadeOut.duration(MOTION.noticeOut).easing(EASE_OUT)}
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
       style={{

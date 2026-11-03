@@ -12,6 +12,7 @@ import { COPY, emptyDayBody, movedToLine } from '@/constants/copy';
 import { LAYOUT } from '@/constants/layout';
 import { TYPE } from '@/constants/type';
 import { MOTION } from '@/constants/motion';
+import { EASE } from '@/constants/easing';
 import { useTasks } from '@/context/DataContext';
 import { useColors } from '@/hooks/useColors';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
@@ -113,8 +114,8 @@ function WeekPhone() {
   const dayTasks = tasksOn(tasks, selected);
   const stripBase = carryWeek ?? selected;
 
-  // Motion (step 11): picking a day fades the list (150 ms); a new week slides the strip and the list
-  // in from the side it came from (220 ms). With Reduce Motion everything only fades.
+  // Motion: picking a day fades the list (fast); a new week slides the strip and the list
+  // in from the side it came from (medium). With Reduce Motion everything only fades.
   const reduceMotion = useReducedMotion();
   const stripWeek = weekDatesFor(stripBase)[0];
   const [lastStripWeek, setLastStripWeek] = useState(stripWeek);
@@ -133,8 +134,8 @@ function WeekPhone() {
   }
   const slideIn = (dir: number) =>
     reduceMotion || dir === 0
-      ? FadeIn.duration(dir === 0 ? MOTION.dayListFade : MOTION.weekChange)
-      : (dir > 0 ? FadeInRight : FadeInLeft).duration(MOTION.weekChange);
+      ? FadeIn.duration(dir === 0 ? MOTION.dayListFade : MOTION.weekChange).easing(EASE)
+      : (dir > 0 ? FadeInRight : FadeInLeft).duration(MOTION.weekChange).easing(EASE);
 
   const choose = (date: string) => {
     haptic.dayTap();

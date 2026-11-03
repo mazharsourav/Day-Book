@@ -2,11 +2,12 @@ import { progressLeft, progressText } from '@/constants/copy';
 import { LAYOUT } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
+import { EASE } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import { progressLabel } from '@/utils/a11y';
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AppText } from './AppText';
 
 interface ProgressBarProps {
@@ -26,7 +27,7 @@ export function ProgressBar({ done, total, isToday }: ProgressBarProps) {
   useEffect(() => {
     width.value = reduceMotion
       ? share
-      : withTiming(share, { duration: MOTION.tickBar, easing: Easing.out(Easing.cubic) });
+      : withTiming(share, { duration: MOTION.tickBar, easing: EASE });
   }, [share, reduceMotion, width]);
 
   const fillStyle = useAnimatedStyle(() => ({ width: `${width.value * 100}%` }));

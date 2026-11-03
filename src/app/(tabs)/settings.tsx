@@ -11,6 +11,7 @@ import { COPY, lastBackupLine, restoreQuestion, restoreSummary } from '@/constan
 import { LAYOUT, TABLET } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
+import { EASE } from '@/constants/easing';
 import { AppearancePreference, useAppearance } from '@/context/AppearanceContext';
 import { useRituals } from '@/context/DataContext';
 import { useReminder } from '@/context/ReminderContext';
@@ -263,7 +264,7 @@ export default function SettingsScreen() {
         </ScrollView>
       }
       right={
-        <Animated.View key={section} entering={FadeIn.duration(MOTION.dayListFade)} style={{ flex: 1 }}>
+        <Animated.View key={section} entering={FadeIn.duration(MOTION.dayListFade).easing(EASE)} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
             <View style={{ paddingHorizontal: LAYOUT.screenPadding, paddingTop: 10, paddingBottom: 14 }}>
               <AppText accessibilityRole="header" style={[TYPE.screenTitle, { fontSize: 28, lineHeight: 34, letterSpacing: -0.7 }]}>

@@ -11,6 +11,7 @@ import { COPY, movedToLine, taskCountLine } from '@/constants/copy';
 import { LAYOUT, TABLET } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
+import { EASE } from '@/constants/easing';
 import { useTasks } from '@/context/DataContext';
 import { useColors } from '@/hooks/useColors';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
@@ -92,7 +93,7 @@ export function WeekBoard() {
   const week = weekDatesFor(shownBase);
   const onThisWeek = week[0] === weekDatesFor(today)[0];
   // While a task is carried the board keeps its place, so the task being held is never unmounted
-  // (that would drop it). Between moves a new week fades in (motion table: 220 ms).
+  // (that would drop it). Between moves a new week fades in (motion table: medium).
   const boardKey = carrying ? weekDatesFor(carrying.from)[0] : week[0];
 
   const flipWeek = (weeks: number) => {
@@ -243,7 +244,7 @@ export function WeekBoard() {
         contentContainerStyle={{ flexGrow: 1, paddingBottom: LAYOUT.newBarHeight + 8 }}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View key={boardKey} entering={FadeIn.duration(MOTION.weekChange)} style={{ flex: 1 }}>
+        <Animated.View key={boardKey} entering={FadeIn.duration(MOTION.weekChange).easing(EASE)} style={{ flex: 1 }}>
           <View
             ref={gridRef}
             collapsable={false}
@@ -417,7 +418,7 @@ function BoardCard({ task, readOnly, lifted, onToggle, onEdit, onDelete, onStart
   const lift = useSharedValue(0);
   useEffect(() => {
     const to = lifted ? 1 : 0;
-    lift.value = reduceMotion ? to : withTiming(to, { duration: lifted ? MOTION.moveLift : MOTION.moveSettle });
+    lift.value = reduceMotion ? to : withTiming(to, { duration: lifted ? MOTION.moveLift : MOTION.moveSettle, easing: EASE });
   }, [lifted, reduceMotion, lift]);
   const liftStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -6 * lift.value }, { scale: 1 + 0.04 * lift.value }],

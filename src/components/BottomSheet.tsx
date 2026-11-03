@@ -1,10 +1,11 @@
 import { ColorTokens } from '@/constants/Colors';
 import { LAYOUT, TABLET } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
+import { RN_EASE, RN_EASE_OUT } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Modal, Pressable, StyleSheet, View } from 'react-native';import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { AccessibilityInfo, Animated, Modal, Pressable, StyleSheet, View } from 'react-native';import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface BottomSheetProps {
@@ -18,7 +19,7 @@ const CLOSE_DISTANCE = 80;
 const CLOSE_SPEED = 800;
 
 // The app's own bottom sheet: dimmed screen, rounded top, a small handle.
-// It rises from the bottom over a fading dim (motion table, 320 ms); with Reduce Motion it fades.
+// It rises from the bottom over a fading dim (motion table, slow); with Reduce Motion it fades.
 // Closes on a tap outside, the Android back button, or a drag down from its top edge.
 export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
   const c = useColors();
@@ -46,7 +47,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
     Animated.timing(progress, {
       toValue: visible ? 1 : 0,
       duration: visible ? MOTION.sheet : MOTION.noticeOut,
-      easing: visible ? Easing.out(Easing.exp) : Easing.out(Easing.quad),
+      easing: visible ? RN_EASE : RN_EASE_OUT,
       useNativeDriver: true,
     }).start(({ finished }) => {
       if (finished && !visible) setMounted(false);
@@ -61,7 +62,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
     .onUpdate((e) => dragY.setValue(Math.max(0, e.translationY)))
     .onEnd((e) => {
       if (e.translationY > CLOSE_DISTANCE || e.velocityY > CLOSE_SPEED) onClose();
-      else Animated.timing(dragY, { toValue: 0, duration: MOTION.moveSettle, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+      else Animated.timing(dragY, { toValue: 0, duration: MOTION.moveSettle, easing: RN_EASE, useNativeDriver: true }).start();
     });
 
   const rise = reduceMotion ? still : progress.interpolate({ inputRange: [0, 1], outputRange: [height, 0] });

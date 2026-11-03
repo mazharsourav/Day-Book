@@ -1,12 +1,12 @@
 import { hitSlopFor, LAYOUT } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
+import { EASE } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import { lockedTickLabel, tickLabel, type SpokenLabel } from '@/utils/a11y';
 import { haptic } from '@/utils/haptics';
 import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
-  Easing,
   useAnimatedProps,
   useAnimatedStyle,
   useReducedMotion,
@@ -73,11 +73,11 @@ export function TickCircle({
       draw.value = to;
       return;
     }
-    fill.value = withTiming(to, { duration: checked ? MOTION.tickFill : MOTION.untick, easing: Easing.out(Easing.cubic) });
+    fill.value = withTiming(to, { duration: checked ? MOTION.tickFill : MOTION.untick, easing: EASE });
     // The mark draws on the way in; on the way out it simply goes with the fill.
     draw.value = checked
-      ? withTiming(1, { duration: MOTION.tickCheck, easing: Easing.out(Easing.cubic) })
-      : withTiming(0, { duration: MOTION.untick });
+      ? withTiming(1, { duration: MOTION.tickCheck, easing: EASE })
+      : withTiming(0, { duration: MOTION.untick, easing: EASE });
   }, [checked, reduceMotion, fill, draw]);
 
   const fillStyle = useAnimatedStyle(() => ({ opacity: fill.value }));

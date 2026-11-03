@@ -10,7 +10,7 @@ import { AppState } from 'react-native';
 // What the person should be told about their saved data, if anything.
 export type StorageNoticeKind = 'save-failed' | 'newer' | 'read-failed' | 'unreadable';
 
-// The note with an Undo button after a task is deleted (and, from step 10, moved). It lives here because
+// The note with an Undo button after a task is deleted or moved. It lives here because
 // Delete task is pressed in the form, and the note shows on Week after the form closes.
 export interface PendingUndo {
   // A new number for each note, so a new note replaces the old one and restarts its time.

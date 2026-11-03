@@ -2,6 +2,7 @@ import { COPY } from '@/constants/copy';
 import { LAYOUT } from '@/constants/layout';
 import { MOTION } from '@/constants/motion';
 import { TYPE } from '@/constants/type';
+import { EASE, EASE_OUT } from '@/constants/easing';
 import { useColors } from '@/hooks/useColors';
 import { Task } from '@/types';
 import { taskLabel } from '@/utils/a11y';
@@ -16,7 +17,7 @@ import { TickCircle } from './ui/TickCircle';
 
 type ScrollRef = Parameters<ReturnType<typeof Gesture.Pan>['blocksExternalGesture']>[0];
 
-// Press, hold and drag to move a task (step 10). Week does the deciding; the row only reports the finger.
+// Press, hold and drag to move a task. Week does the deciding; the row only reports the finger.
 export interface TaskDrag {
   // The task is being carried: it lifts with a shadow (frame 20).
   lifted: boolean;
@@ -55,7 +56,7 @@ export function TaskRow({ task, readOnly, last, onToggle, onEdit, onDelete, drag
   const lift = useSharedValue(0);
   useEffect(() => {
     const to = lifted ? 1 : 0;
-    lift.value = reduceMotion ? to : withTiming(to, { duration: lifted ? MOTION.moveLift : MOTION.moveSettle });
+    lift.value = reduceMotion ? to : withTiming(to, { duration: lifted ? MOTION.moveLift : MOTION.moveSettle, easing: EASE });
   }, [lifted, reduceMotion, lift]);
   const liftStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -4 * lift.value }] }));
 
@@ -87,9 +88,9 @@ export function TaskRow({ task, readOnly, last, onToggle, onEdit, onDelete, drag
   };
 
   return (
-    // Deleting folds the row away: it fades and the rows below close the gap (motion table: 220 ms).
+    // Deleting folds the row away: it fades and the rows below close the gap (motion table: medium).
     // The fold is on its own wrapper, so it never fights the row's own fading while a task is carried.
-    <Animated.View exiting={FadeOut.duration(MOTION.deleteFold)} layout={reduceMotion ? undefined : LinearTransition.duration(MOTION.deleteFold)}>
+    <Animated.View exiting={FadeOut.duration(MOTION.deleteFold).easing(EASE_OUT)} layout={reduceMotion ? undefined : LinearTransition.duration(MOTION.deleteFold).easing(EASE)}>
     <Animated.View
       style={[
         {

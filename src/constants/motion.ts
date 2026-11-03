@@ -1,7 +1,9 @@
 // How long things move, from the design board ("Motion and type").
-// Three speeds only, nothing over 400 ms. Things coming in start fast and settle; things leaving are quicker.
+// Three speeds only, nothing over 300 ms. Things coming in start fast and settle softly; things leaving are quicker.
+// Mazhar, 4 November 2026: shorter and smoother, like Apple's own apps (was 150, 220 and 320 ms).
+// The curves are in easing.ts.
 
-export const SPEED = { fast: 150, medium: 220, slow: 320 } as const;
+export const SPEED = { fast: 100, medium: 160, slow: 240 } as const;
 
 // One entry per row of the board's motion table.
 export const MOTION = {
@@ -22,7 +24,7 @@ export const MOTION = {
   moveSettle: SPEED.medium,
   deleteFold: SPEED.medium,
   switchThumb: SPEED.fast,
-  themeFade: SPEED.medium,
+  themeFade: SPEED.fast,
   shareCard: SPEED.medium,
   noticeIn: SPEED.slow,
   noticeOut: SPEED.fast,

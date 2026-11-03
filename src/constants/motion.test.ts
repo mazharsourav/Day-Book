@@ -4,14 +4,14 @@ import { test } from 'node:test';
 import { MOTION, SPEED, UNDO_MS, undoDuration } from './motion';
 
 test('only three speeds, as on the board', () => {
-  assert.deepEqual(SPEED, { fast: 150, medium: 220, slow: 320 });
+  assert.deepEqual(SPEED, { fast: 100, medium: 160, slow: 240 });
 });
 
-test('every animation on the motion table uses one of the speeds and stays under 400 ms', () => {
+test('every animation on the motion table uses one of the speeds and stays under 300 ms', () => {
   const allowed = new Set<number>([SPEED.fast, SPEED.medium, SPEED.slow]);
   for (const [name, ms] of Object.entries(MOTION)) {
     assert.ok(allowed.has(ms), `${name} uses ${ms} ms`);
-    assert.ok(ms <= 400, `${name} is longer than 400 ms`);
+    assert.ok(ms <= 300, `${name} is longer than 300 ms`);
   }
 });
 

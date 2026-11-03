@@ -18,15 +18,6 @@ export interface ColorTokens {
   tint: string;
   // Behind sheets and forms.
   dim: string;
-
-  // 1.0.0 names, kept only until every screen is redrawn. Since step 4 they point at the new colours,
-  // so screens not yet redrawn (Settings, the storage notice) already match. Removed once nothing uses them.
-  well: string;
-  hairline: string;
-  ink: string;
-  inkMuted: string;
-  done: string;
-  onDone: string;
 }
 
 export const lightColors: ColorTokens = {
@@ -41,13 +32,6 @@ export const lightColors: ColorTokens = {
   onAccent: '#FFFFFF',
   tint: '#D9E3DF',
   dim: 'rgba(10, 10, 20, 0.38)',
-
-  well: '#F3F5F4',
-  hairline: '#E4E8E6',
-  ink: '#14141A',
-  inkMuted: '#5E6864',
-  done: '#1F5A45',
-  onDone: '#FFFFFF',
 };
 
 export const darkColors: ColorTokens = {
@@ -62,13 +46,6 @@ export const darkColors: ColorTokens = {
   onAccent: '#05241A',
   tint: '#1A322A',
   dim: 'rgba(0, 0, 0, 0.6)',
-
-  well: '#181D1B',
-  hairline: '#272E2B',
-  ink: '#F3F3F6',
-  inkMuted: '#9CA8A3',
-  done: '#5CD6A6',
-  onDone: '#05241A',
 };
 
 function hexToRgb(hex: string): [number, number, number] {
