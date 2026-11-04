@@ -6,9 +6,9 @@ No account. No ads. No subscription. Your habits stay on your phone.
 
 **Version 2.0.0**
 
-| Today | Week | History | Share your month | Dark |
-|---|---|---|---|---|
-| ![Today](docs/screenshots/today.png) | ![Week](docs/screenshots/week.png) | ![History](docs/screenshots/history.png) | ![Share your month](docs/screenshots/share.png) | ![Today in dark](docs/screenshots/today-dark.png) |
+| Today | Week | History |
+|---|---|---|
+| ![Today](docs/screenshots/today.png) | ![Week](docs/screenshots/week.png) | ![History](docs/screenshots/history.png) |
 
 The pictures use sample data.
 
