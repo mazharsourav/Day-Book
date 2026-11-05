@@ -30,6 +30,22 @@ service-account*.json
 *.apk
 *.aab
 
+# Private working files. These stay on this computer and are never published.
+plan.md
+UPDATE.md
+PRODUCT.md
+DESIGN.md
+AGENTS.md
+CLAUDE.md
+design/
+docs-private/
+.claude/
+.impeccable/
+.playwright-mcp/
+
+# Backup files hold real habit names. Never publish one.
+daybook-backup-*.json
+
 # Secrets and local settings
 .env
 .env.*
